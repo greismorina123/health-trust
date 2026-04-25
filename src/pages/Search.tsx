@@ -6,7 +6,7 @@ import { SearchMap } from "@/components/SearchMap";
 import { FacilityDetail } from "@/components/FacilityDetail";
 import { type Facility, facilities as fallbackFacilities, trustTier } from "@/data/facilities";
 import { useRole, dashboardPathFor } from "@/context/RoleContext";
-import { SAFETY_NOTE, userQueryChips } from "@/data/roleData";
+import { SAFETY_NOTE } from "@/data/roleData";
 import {
   type QueryResponseApi,
   facilityFromPin,
