@@ -73,9 +73,8 @@ const Search = () => {
         .filter((r: any) => r && r.facility_id && Number.isFinite(r.latitude) && Number.isFinite(r.longitude))
         .map(facilityFromSearchResult);
       setResults(mapped);
-      // Auto-open the highest-ranked facility in the drawer
-      const top = mapped[0];
-      if (top) await openFacility(top);
+      // Do not auto-open — let the user pick a result from the list
+      setSelected(null);
     } catch {
       setSearchError("Search failed. Showing fallback data.");
       setQueryResponse(null);
