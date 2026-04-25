@@ -1,9 +1,24 @@
 import { Link } from "react-router-dom";
-import { MapPin, User } from "lucide-react";
+import { MapPin, Moon, Sun, User } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface Props {
   variant?: "landing" | "app";
 }
+
+const ThemeToggle = () => {
+  const { theme, toggle } = useTheme();
+  return (
+    <button
+      onClick={toggle}
+      title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label="Toggle theme"
+      className="h-7 w-7 rounded-full bg-panel-elevated border border-border-subtle flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+    >
+      {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+    </button>
+  );
+};
 
 export const Nav = ({ variant = "app" }: Props) => {
   return (
@@ -16,6 +31,7 @@ export const Nav = ({ variant = "app" }: Props) => {
 
         {variant === "landing" ? (
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Sign In
             </Link>
@@ -31,6 +47,7 @@ export const Nav = ({ variant = "app" }: Props) => {
             <button className="text-xs text-muted-foreground hover:text-foreground transition-colors hidden sm:inline">
               How it works
             </button>
+            <ThemeToggle />
             <Link
               to="/signup"
               title="Sign In"
