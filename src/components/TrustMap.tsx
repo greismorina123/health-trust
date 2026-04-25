@@ -122,7 +122,7 @@ export const TrustMap = ({
         <FlyTo focus={focus} />
         <ClickCatcher onClick={onMapClick} />
 
-        {mode === "facilities" && <div className="crossfade-in">{facilityMarkers}</div>}
+        {mode === "facilities" && <>{facilityMarkers}</>}
 
         {mode === "deserts" &&
           desertZones.map((z) => (
