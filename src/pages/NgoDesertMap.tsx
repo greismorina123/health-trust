@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Building2, Download, Filter, ShieldAlert } from "lucide-react";
+import { Building2, Download, Filter } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { DesertMap } from "@/components/DesertMap";
 import { Disclaimer } from "@/components/Disclaimer";
@@ -9,7 +9,6 @@ import {
   type RiskLevel,
   capabilityFilters,
   desertRegions as fallbackDesertRegions,
-  SAFETY_NOTE,
 } from "@/data/roleData";
 import { trustHsl } from "@/data/facilities";
 import { desertRegionFromDistrict, getDistricts } from "@/services/trustmapApi";
@@ -102,11 +101,7 @@ const NgoDesertMap = () => {
           </button>
         </div>
 
-        {/* Safety note */}
-        <div className="fade-up mb-5 rounded-lg border border-border-subtle bg-panel/60 px-3.5 py-2.5 flex items-start gap-2">
-          <ShieldAlert className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
-          <p className="text-xs text-muted-foreground leading-relaxed">{SAFETY_NOTE}</p>
-        </div>
+
 
         {/* Filters */}
         <section className="fade-up rounded-xl border border-border-subtle bg-panel p-4 mb-4">
