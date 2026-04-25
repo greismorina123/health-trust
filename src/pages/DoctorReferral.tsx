@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Search as SearchIcon, AlertTriangle, MapPin, ShieldAlert, ArrowLeft, ChevronDown, Stethoscope, Loader2 } from "lucide-react";
+import { Search as SearchIcon, AlertTriangle, MapPin, ShieldAlert, ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, Stethoscope, Loader2 } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { SearchMap } from "@/components/SearchMap";
 import { Disclaimer } from "@/components/Disclaimer";
