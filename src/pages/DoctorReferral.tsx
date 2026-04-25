@@ -58,7 +58,6 @@ const cautionFromScore = (score: number): ReferralCaution => {
 
 const DoctorReferral = () => {
   const { role } = useRole();
-  if (role !== "doctor") return <Navigate to={dashboardPathFor(role)} replace />;
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState<string | null>(null);
   const [results, setResults] = useState<Facility[]>([]);

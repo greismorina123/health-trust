@@ -25,7 +25,6 @@ const riskBadge = (level: RiskLevel) =>
 
 const NgoDesertMap = () => {
   const { role } = useRole();
-  if (role !== "ngo") return <Navigate to={dashboardPathFor(role)} replace />;
   const [capability, setCapability] = useState<CapabilityKey | "all">("all");
   const [state, setState] = useState<string>("all");
   const [trustThreshold, setTrustThreshold] = useState<number>(0);
