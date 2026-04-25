@@ -49,10 +49,6 @@ const Landing = () => {
 
       <main className="px-6 pt-24 pb-20">
         <section className="max-w-2xl mx-auto text-center fade-up">
-          <span className="inline-block px-3 py-1 rounded-full bg-panel border border-border-subtle text-xs uppercase tracking-wide text-muted-foreground">
-            The Reasoning Layer for 1.4 Billion Lives
-          </span>
-
           <h1 className="mt-5 text-2xl sm:text-4xl font-bold tracking-tight text-foreground">
             Find healthcare you can actually trust
           </h1>
