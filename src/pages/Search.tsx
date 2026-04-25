@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Search as SearchIcon, AlertTriangle, MapPin, X, ArrowLeft, Loader2 } from "lucide-react";
 import { Nav } from "@/components/Nav";
@@ -7,6 +7,27 @@ import { FacilityDetail } from "@/components/FacilityDetail";
 import { Disclaimer } from "@/components/Disclaimer";
 import { type Facility, facilities as fallbackFacilities, trustTier } from "@/data/facilities";
 import { useRole, dashboardPathFor } from "@/context/RoleContext";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  CARE_OPTIONS,
+  LOCATION_OPTIONS,
+  TRUST_OPTIONS,
+  applyTrustFilter,
+  buildCombinedQuery,
+  defaultFilters,
+  filtersFromParams,
+  filtersToParams,
+  type CareKey,
+  type FilterState,
+  type LocationKey,
+  type TrustKey,
+} from "@/lib/searchFilters";
 
 import {
   type QueryResponseApi,
