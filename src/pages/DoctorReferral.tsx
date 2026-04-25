@@ -16,7 +16,7 @@ import {
   cautionStyles,
   capabilityStatusStyles,
   desertRegions as fallbackDesertRegions,
-  doctorQueryChips,
+  
   SAFETY_NOTE,
   verifications,
 } from "@/data/roleData";
@@ -192,18 +192,6 @@ const DoctorReferral = () => {
           </div>
         </form>
 
-        {/* Query chips */}
-        <div className="mt-3 flex flex-wrap gap-2">
-          {doctorQueryChips.map((c) => (
-            <button
-              key={c}
-              onClick={() => runChip(c)}
-              className="px-3 h-7 rounded-full text-xs text-muted-foreground bg-panel border border-border-subtle hover:text-foreground hover:border-primary/40 transition-colors"
-            >
-              {c}
-            </button>
-          ))}
-        </div>
 
         {searchError && (
           <div className="mt-3 rounded-lg border border-trust-low/30 bg-trust-low/5 px-3.5 py-2 text-xs text-trust-low">
