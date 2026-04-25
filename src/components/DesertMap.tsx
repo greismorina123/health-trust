@@ -43,6 +43,19 @@ export const DesertMap = ({ regions, selectedId, onSelect }: Props) => {
     mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 0.6, maxZoom: 6 });
   }, [regions]);
 
+  // Invalidate Leaflet's cached size whenever the container resizes
+  // (e.g. when a sibling panel collapses and the map suddenly gets wider).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const container = map.getContainer();
+    const ro = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    ro.observe(container);
+    return () => ro.disconnect();
+  }, []);
+
   return (
     <MapContainer
       center={INDIA_CENTER}
