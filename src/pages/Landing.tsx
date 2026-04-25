@@ -68,49 +68,49 @@ const Landing = () => {
           </div>
         </section>
 
-        <section className="max-w-5xl mx-auto mt-32 fade-up">
-          <div className="mb-16">
-            <span className="text-primary text-sm font-medium tracking-widest uppercase">
+        <section className="max-w-3xl mx-auto mt-32 fade-up">
+          <div className="mb-12">
+            <span className="text-primary text-xs font-medium tracking-widest uppercase">
               How it works
             </span>
           </div>
 
           <div className="divide-y divide-border-subtle border-y border-border-subtle">
-            <div className="grid grid-cols-[72px_1fr] sm:grid-cols-[120px_1fr] gap-8 sm:gap-12 py-12 sm:py-14">
-              <span className="text-muted-foreground text-2xl sm:text-3xl font-mono">01</span>
+            <div className="grid grid-cols-[48px_1fr] sm:grid-cols-[60px_1fr] gap-6 py-7">
+              <span className="text-muted-foreground text-sm font-mono">01</span>
               <div>
-                <h3 className="text-xl sm:text-2xl font-medium text-foreground mb-3">
+                <h3 className="text-base font-medium text-foreground mb-1">
                   Ask what kind of care you need
                 </h3>
-                <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   TrustMap finds nearby facilities and checks whether their claims look reliable.
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-[72px_1fr] sm:grid-cols-[120px_1fr] gap-8 sm:gap-12 py-12 sm:py-14">
-              <span className="text-muted-foreground text-2xl sm:text-3xl font-mono">02</span>
+            <div className="grid grid-cols-[48px_1fr] sm:grid-cols-[60px_1fr] gap-6 py-7">
+              <span className="text-muted-foreground text-sm font-mono">02</span>
               <div>
-                <h3 className="text-xl sm:text-2xl font-medium text-foreground mb-4">
+                <h3 className="text-base font-medium text-foreground mb-2">
                   Each facility gets a simple Trust Score
                 </h3>
-                <div className="space-y-3 text-base sm:text-lg">
-                  <div className="flex items-center gap-3">
-                    <span className="size-3 rounded-full bg-trust-high" />
+                <div className="space-y-1.5 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="size-2 rounded-full bg-trust-high" />
                     <span>
                       <span className="text-foreground">Green</span>{" "}
                       <span className="text-muted-foreground">— likely reliable</span>
                     </span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="size-3 rounded-full bg-trust-mid" />
+                  <div className="flex items-center gap-2">
+                    <span className="size-2 rounded-full bg-trust-mid" />
                     <span>
                       <span className="text-foreground">Yellow</span>{" "}
                       <span className="text-muted-foreground">— uncertain</span>
                     </span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="size-3 rounded-full bg-trust-low" />
+                  <div className="flex items-center gap-2">
+                    <span className="size-2 rounded-full bg-trust-low" />
                     <span>
                       <span className="text-foreground">Red</span>{" "}
                       <span className="text-muted-foreground">— risky or incomplete</span>
@@ -120,25 +120,25 @@ const Landing = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-[72px_1fr] sm:grid-cols-[120px_1fr] gap-8 sm:gap-12 py-12 sm:py-14">
-              <span className="text-muted-foreground text-2xl sm:text-3xl font-mono">03</span>
+            <div className="grid grid-cols-[48px_1fr] sm:grid-cols-[60px_1fr] gap-6 py-7">
+              <span className="text-muted-foreground text-sm font-mono">03</span>
               <div>
-                <h3 className="text-xl sm:text-2xl font-medium text-foreground mb-3">
+                <h3 className="text-base font-medium text-foreground mb-1">
                   Click a facility for the full picture
                 </h3>
-                <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   See what supports the score, what is missing, and what should be verified.
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-[72px_1fr] sm:grid-cols-[120px_1fr] gap-8 sm:gap-12 py-12 sm:py-14">
-              <span className="text-muted-foreground text-2xl sm:text-3xl font-mono">04</span>
+            <div className="grid grid-cols-[48px_1fr] sm:grid-cols-[60px_1fr] gap-6 py-7">
+              <span className="text-muted-foreground text-sm font-mono">04</span>
               <div>
-                <h3 className="text-xl sm:text-2xl font-medium text-foreground mb-3">
+                <h3 className="text-base font-medium text-foreground mb-1">
                   Use the heatmap
                 </h3>
-                <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   Spot areas where critical care is hard to find.
                 </p>
               </div>
