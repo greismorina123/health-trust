@@ -31,6 +31,7 @@ import {
 } from "@/services/trustmapApi";
 import { useCountUp } from "@/hooks/useCountUp";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const trustBadgeClass = (score: number) => {
   const t = trustTier(score);
@@ -112,7 +113,10 @@ const DoctorReferral = () => {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const q = query.trim();
-    if (!q) return;
+    if (!q) {
+      toast("Please enter a search query");
+      return;
+    }
     setSubmitted(q);
     setSelected(null);
     void runSearch(q);
