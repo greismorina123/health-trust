@@ -16,6 +16,7 @@ import {
   facilities,
   trustHsl,
 } from "@/data/facilities";
+import { useTheme } from "@/components/ThemeProvider";
 
 const INDIA_CENTER: [number, number] = [22.0, 79.0];
 const INDIA_BOUNDS: LatLngBoundsExpression = [
@@ -74,6 +75,7 @@ export const SearchMap = ({
 }: Props) => {
   const mapRef = useRef<LeafletMap | null>(null);
   const resultSet = useMemo(() => new Set(resultIds), [resultIds]);
+  const { theme } = useTheme();
 
   const facilityMarkers = useMemo(
     () =>
@@ -170,7 +172,12 @@ export const SearchMap = ({
       }}
     >
       <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        key={theme}
+        url={
+          theme === "light"
+            ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+            : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        }
         attribution='&copy; OpenStreetMap &copy; CARTO'
         subdomains={["a", "b", "c", "d"]}
       />
