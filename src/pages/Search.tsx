@@ -368,9 +368,6 @@ const Search = () => {
                     <div className="px-4 py-2.5 border-b border-border-subtle flex items-center gap-2">
                       <MapPin className="h-3.5 w-3.5 text-primary" />
                       <span className="text-xs text-foreground font-medium">{selected.district}, {selected.state}</span>
-                      <span className="text-xs text-muted-foreground ml-auto font-mono">
-                        {selected.lat.toFixed(3)}, {selected.lng.toFixed(3)}
-                      </span>
                     </div>
                     <div className="relative w-full h-[calc(100%-40px)]">
                       <SearchMap
