@@ -10,39 +10,39 @@
 
 @layer base {
   :root {
-    /* Dark is the default — TrustMap is a data product */
-    --background: 240 10% 4%;            /* #09090b zinc-950 */
-    --foreground: 0 0% 98%;              /* #fafafa */
+    /* Dark navy blue palette — TrustMap data product */
+    --background: 222 47% 6%;            /* deep navy ~#070d1a */
+    --foreground: 210 40% 98%;
 
-    --panel: 240 6% 10%;                 /* #18181b zinc-900 */
-    --panel-elevated: 240 4% 16%;        /* #27272a zinc-800 */
-    --panel-accent: 217 91% 18%;         /* deep blue accent */
+    --panel: 222 45% 10%;                /* navy panel */
+    --panel-elevated: 222 40% 16%;       /* raised navy */
+    --panel-accent: 217 91% 22%;         /* blue accent surface */
 
-    --card: 240 6% 10%;
-    --card-foreground: 0 0% 98%;
+    --card: 222 45% 10%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 240 10% 4%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 222 47% 6%;
+    --popover-foreground: 210 40% 98%;
 
     --primary: 217 91% 60%;              /* #3b82f6 blue-500 */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 4% 16%;             /* zinc-800 */
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 222 40% 16%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 240 4% 16%;
-    --muted-foreground: 240 5% 65%;      /* zinc-400 #a1a1aa */
-    --muted-foreground-strong: 240 5% 84%;
+    --muted: 222 40% 16%;
+    --muted-foreground: 215 20% 65%;
+    --muted-foreground-strong: 213 27% 84%;
 
     --accent: 217 91% 60%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;            /* #ef4444 red-500 */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 5% 26%;                /* #3f3f46 zinc-700 */
-    --border-subtle: 240 4% 16%;         /* zinc-800 */
-    --input: 240 5% 26%;
+    --border: 222 30% 24%;
+    --border-subtle: 222 35% 16%;
+    --input: 222 30% 24%;
     --ring: 217 91% 60%;
 
     /* Trust palette (zinc-spec) */
@@ -65,28 +65,29 @@
   }
 
   .light {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 4%;
+    /* Light mode — soft blue-tinted whites */
+    --background: 210 40% 99%;
+    --foreground: 222 47% 11%;
 
-    --panel: 0 0% 98%;
-    --panel-elevated: 240 5% 92%;
+    --panel: 210 40% 96%;
+    --panel-elevated: 214 32% 91%;
     --panel-accent: 217 91% 95%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 4%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 4%;
+    --popover-foreground: 222 47% 11%;
 
     --primary: 217 91% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 5% 94%;
-    --secondary-foreground: 240 10% 4%;
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 240 5% 94%;
-    --muted-foreground: 240 5% 35%;
-    --muted-foreground-strong: 240 8% 20%;
+    --muted: 214 32% 91%;
+    --muted-foreground: 215 16% 40%;
+    --muted-foreground-strong: 222 30% 20%;
 
     --accent: 217 91% 50%;
     --accent-foreground: 0 0% 100%;
@@ -94,14 +95,19 @@
     --destructive: 0 75% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 5% 84%;
-    --border-subtle: 240 5% 90%;
-    --input: 240 5% 84%;
+    --border: 214 25% 82%;
+    --border-subtle: 214 30% 88%;
+    --input: 214 25% 82%;
     --ring: 217 91% 50%;
 
     --trust-high: 142 71% 38%;
     --trust-mid: 38 92% 45%;
     --trust-low: 0 75% 50%;
+
+    --status-confirmed: 142 71% 38%;
+    --status-inferred: 217 91% 50%;
+    --status-contradicted: 0 75% 50%;
+    --status-unknown: 215 16% 47%;
   }
 }
 
