@@ -276,7 +276,7 @@ export function facilityFromSearchResult(r: SearchResultApi): Facility {
       Math.min(100, r.overall_trust_score + 10),
     ],
     sub_scores: { consistency: 12, plausibility: 12, activity: 12, completeness: 12 },
-    summary: r.match_reason ?? "Matched via TrustMap query.",
+    summary: r.match_reason ?? "Matched via CareMap query.",
     lat: r.latitude,
     lng: r.longitude,
     claims: [],
