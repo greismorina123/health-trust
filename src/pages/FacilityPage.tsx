@@ -2,6 +2,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { FacilityDetail } from "@/components/FacilityDetail";
+import { Disclaimer } from "@/components/Disclaimer";
 import { getFacility } from "@/data/facilities";
 
 const FacilityPage = () => {
@@ -39,6 +40,7 @@ const FacilityPage = () => {
             <FacilityDetail facility={facility} standalone />
           </div>
         </div>
+        <Disclaimer />
       </main>
     </div>
   );

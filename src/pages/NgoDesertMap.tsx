@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Building2, Download, Filter, ShieldAlert } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { DesertMap } from "@/components/DesertMap";
+import { Disclaimer } from "@/components/Disclaimer";
 import {
   type CapabilityKey,
   type DesertRegion,
@@ -248,6 +249,7 @@ const NgoDesertMap = () => {
             </table>
           </div>
         </section>
+        <Disclaimer />
       </main>
     </div>
   );
