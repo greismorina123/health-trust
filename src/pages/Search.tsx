@@ -86,19 +86,20 @@ const Search = () => {
   }, []);
 
   // Run a query against the API
-  const runSearch = async (q: string) => {
+  const runSearch = async (text: string, f: FilterState) => {
+    const combined = buildCombinedQuery(text, f);
     setIsSearching(true);
     setSearchError(null);
     try {
-      const resp = await searchFacilities(q);
+      const resp = await searchFacilities(combined || text);
       setQueryResponse(resp);
       // Filter out non-facility entries (e.g. district/desert results) which lack coords/id
       const mapped = resp.results
         .filter((r: any) => r && r.facility_id && Number.isFinite(r.latitude) && Number.isFinite(r.longitude))
         .map(facilityFromSearchResult);
       setResults(mapped);
-      // Auto-open the highest-ranked facility in the drawer
-      const top = mapped[0];
+      // Auto-open the highest-ranked facility (after trust filtering) in the drawer
+      const top = applyTrustFilter(mapped, f.trust)[0];
       if (top) await openFacility(top);
     } catch {
       setSearchError("Search failed. Showing fallback data.");
@@ -110,11 +111,11 @@ const Search = () => {
     }
   };
 
-  // Re-run query when ?q= appears (e.g. on first load)
+  // Re-run query when ?q= or filters change (e.g. on first load)
   useEffect(() => {
-    if (submittedQuery) void runSearch(submittedQuery);
+    if (submittedQuery) void runSearch(submittedQuery, submittedFilters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [submittedQuery]);
+  }, [submittedQuery, submittedFilters]);
 
   useEffect(() => {
     if (!selected) return;
@@ -125,7 +126,14 @@ const Search = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, [selected]);
 
-  
+  const commitSearch = (text: string, f: FilterState) => {
+    const sp = new URLSearchParams();
+    if (text) sp.set("q", text);
+    for (const [k, v] of Object.entries(filtersToParams(f))) sp.set(k, v);
+    setParams(sp);
+    setSubmittedQuery(text);
+    setSubmittedFilters(f);
+  };
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -134,14 +142,22 @@ const Search = () => {
       toast("Please enter a search query");
       return;
     }
-    setParams({ q });
-    setSubmittedQuery(q);
+    commitSearch(q, filters);
   };
 
   const runChip = (text: string) => {
     setQuery(text);
-    setParams({ q: text });
-    setSubmittedQuery(text);
+    commitSearch(text, filters);
+  };
+
+  const updateFilter = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
+    const next = { ...filters, [key]: value };
+    setFilters(next);
+    if (submittedQuery) commitSearch(submittedQuery, next);
+  };
+
+  const clearFilter = <K extends keyof FilterState>(key: K) => {
+    updateFilter(key, defaultFilters[key] as FilterState[K]);
   };
 
   const openFacility = async (f: Facility) => {
