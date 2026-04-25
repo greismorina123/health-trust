@@ -3,7 +3,34 @@ import { MapPin, Moon, Sun, ChevronDown, User, Stethoscope, Building2 } from "lu
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { dashboardPathFor, useRole, type Role } from "@/context/RoleContext";
+import { useBackendStatus } from "@/hooks/useBackendStatus";
 import { cn } from "@/lib/utils";
+
+const BackendStatusDot = () => {
+  const status = useBackendStatus();
+  const tone =
+    status === "online"
+      ? "bg-trust-high"
+      : status === "offline"
+        ? "bg-trust-low"
+        : "bg-muted-foreground";
+  const label =
+    status === "online"
+      ? "Backend connected"
+      : status === "offline"
+        ? "Backend unavailable · using fallback data"
+        : "Checking backend…";
+  return (
+    <span
+      title={label}
+      aria-label={label}
+      className="hidden sm:inline-flex items-center gap-1.5 h-7 px-2 rounded-full bg-panel-elevated border border-border-subtle text-[10px] text-muted-foreground"
+    >
+      <span className={cn("h-1.5 w-1.5 rounded-full", tone, status === "checking" && "animate-pulse")} />
+      <span>{status === "online" ? "API" : status === "offline" ? "Fallback" : "…"}</span>
+    </span>
+  );
+};
 
 interface Props {
   variant?: "landing" | "app";
@@ -113,6 +140,7 @@ export const Nav = ({ variant = "app" }: Props) => {
           </div>
         ) : (
           <div className="flex items-center gap-2">
+            <BackendStatusDot />
             <RoleSwitcher />
             <ThemeToggle />
           </div>

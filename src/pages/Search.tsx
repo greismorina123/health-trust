@@ -1,16 +1,21 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { Search as SearchIcon, AlertTriangle, MapPin, X, ArrowLeft, ShieldAlert, Sparkles } from "lucide-react";
+import { Search as SearchIcon, AlertTriangle, MapPin, X, ArrowLeft, ShieldAlert, Sparkles, Loader2 } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { SearchMap } from "@/components/SearchMap";
 import { FacilityDetail } from "@/components/FacilityDetail";
-import {
-  type Facility,
-  facilities,
-  trustTier,
-} from "@/data/facilities";
+import { type Facility, facilities as fallbackFacilities, trustTier } from "@/data/facilities";
 import { useRole, dashboardPathFor } from "@/context/RoleContext";
 import { SAFETY_NOTE, userQueryChips } from "@/data/roleData";
+import {
+  type QueryResponseApi,
+  facilityFromPin,
+  facilityFromSearchResult,
+  facilityFromDetail,
+  getFacilityPins,
+  getFacilityDetail,
+  searchFacilities,
+} from "@/services/trustmapApi";
 import { cn } from "@/lib/utils";
 
 const trustBadgeClass = (score: number) => {
@@ -31,17 +36,56 @@ const Search = () => {
   const [selected, setSelected] = useState<Facility | null>(null);
   const [showMap, setShowMap] = useState(true);
 
-  const results = useMemo(() => {
-    if (!submittedQuery) return [];
-    return [...facilities].sort((a, b) => b.trust_score - a.trust_score);
-  }, [submittedQuery]);
+  const [pins, setPins] = useState<Facility[]>([]);
+  const [results, setResults] = useState<Facility[]>([]);
+  const [queryResponse, setQueryResponse] = useState<QueryResponseApi | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
-  // Auto-open top result so the User experience matches the spec's "open the highest-ranked facility"
+  // Initial pin load
   useEffect(() => {
-    if (submittedQuery && results.length > 0 && !selected) {
-      // Keep selection optional — users can click pins/cards.
+    let cancelled = false;
+    (async () => {
+      try {
+        const apiPins = await getFacilityPins();
+        if (!cancelled) setPins(apiPins.map(facilityFromPin));
+      } catch {
+        if (!cancelled) setPins(fallbackFacilities);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Run a query against the API
+  const runSearch = async (q: string) => {
+    setIsSearching(true);
+    setSearchError(null);
+    try {
+      const resp = await searchFacilities(q);
+      setQueryResponse(resp);
+      const mapped = resp.results.map(facilityFromSearchResult);
+      setResults(mapped);
+      // Auto-open the highest-ranked facility in the drawer
+      const top = mapped[0];
+      if (top) await openFacility(top);
+    } catch {
+      setSearchError("Search failed. Showing fallback data.");
+      setQueryResponse(null);
+      const fallback = [...fallbackFacilities].sort((a, b) => b.trust_score - a.trust_score);
+      setResults(fallback);
+    } finally {
+      setIsSearching(false);
     }
-  }, [submittedQuery, results, selected]);
+  };
+
+  // Re-run query when ?q= appears (e.g. on first load)
+  useEffect(() => {
+    if (submittedQuery) void runSearch(submittedQuery);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submittedQuery]);
 
   useEffect(() => {
     if (!selected) return;
@@ -52,8 +96,7 @@ const Search = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, [selected]);
 
-  // Redirect non-user roles to their own dashboard.
-  if (role !== "user") return <Navigate to={dashboardPathFor(role)} replace />;
+  
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -61,32 +104,57 @@ const Search = () => {
     if (!q) return;
     setParams({ q });
     setSubmittedQuery(q);
-    setSelected(null);
   };
 
   const runChip = (text: string) => {
     setQuery(text);
     setParams({ q: text });
     setSubmittedQuery(text);
-    setSelected(null);
   };
 
-  const pickFacility = (f: Facility) => {
+  const openFacility = async (f: Facility) => {
     setSelected(f);
     setShowMap(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setIsLoadingDetail(true);
+    try {
+      const detail = await getFacilityDetail(f.id);
+      setSelected(facilityFromDetail(detail));
+    } catch {
+      // 404 / error → keep the lightweight version, mark summary
+      setSelected({ ...f, summary: "Detailed facility record unavailable." });
+    } finally {
+      setIsLoadingDetail(false);
+    }
   };
 
+  // Build agent steps from API reasoning_steps if present, else from local heuristics.
   const top = results[0];
-  const agentSteps = submittedQuery && top
-    ? [
-        { title: "What care was requested", detail: submittedQuery },
-        { title: "What location was searched", detail: "Maharashtra (rural districts) and nearby" },
-        { title: "What facilities were found", detail: `${results.length} candidate facilities matched` },
-        { title: "What risks were detected", detail: top.red_flags[0] ?? "No major risks flagged" },
-        { title: "Best available option", detail: `${top.name} — Trust Score ${top.trust_score}` },
-      ]
-    : [];
+  const agentSteps = useMemo(() => {
+    if (!submittedQuery) return [];
+    if (queryResponse?.reasoning_steps?.length) {
+      return queryResponse.reasoning_steps.map((s, i) => ({
+        title: `Step ${i + 1}`,
+        detail: s,
+      }));
+    }
+    if (!top) return [];
+    return [
+      { title: "What care was requested", detail: submittedQuery },
+      { title: "What location was searched", detail: "Across India" },
+      { title: "What facilities were found", detail: `${results.length} candidate facilities matched` },
+      { title: "What risks were detected", detail: top.red_flags[0] ?? "No major risks flagged" },
+      { title: "Best available option", detail: `${top.name} — Trust Score ${top.trust_score}` },
+    ];
+  }, [submittedQuery, queryResponse, top, results.length]);
+
+  const queryPlan = queryResponse?.query_plan;
+  const ci = queryResponse?.confidence_interval;
+
+  if (role !== "user") return <Navigate to={dashboardPathFor(role)} replace />;
+
+  // Map source: results when searched, otherwise initial pins
+  const mapFacilities = submittedQuery && results.length ? results : pins;
+  const mapResultIds = submittedQuery ? results.map((r) => r.id) : [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -105,8 +173,10 @@ const Search = () => {
             />
             <button
               type="submit"
-              className="h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity shrink-0"
+              disabled={isSearching}
+              className="h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity shrink-0 inline-flex items-center gap-2 disabled:opacity-60"
             >
+              {isSearching && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               Search
             </button>
           </div>
@@ -131,6 +201,12 @@ const Search = () => {
           <p className="text-xs text-muted-foreground leading-relaxed">{SAFETY_NOTE}</p>
         </div>
 
+        {searchError && (
+          <div className="mt-3 rounded-lg border border-trust-low/30 bg-trust-low/5 px-3.5 py-2 text-xs text-trust-low">
+            {searchError}
+          </div>
+        )}
+
         {/* Empty state */}
         {!submittedQuery && (
           <div className="mt-16 flex flex-col items-center text-center fade-up">
@@ -138,6 +214,11 @@ const Search = () => {
             <p className="mt-3 text-sm text-muted-foreground">
               Ask a question or pick an example to get started
             </p>
+            {pins.length > 0 && (
+              <p className="mt-1 text-xs text-muted-foreground/60">
+                {pins.length} facilities loaded on the map
+              </p>
+            )}
           </div>
         )}
 
@@ -147,16 +228,33 @@ const Search = () => {
             <section>
               <div className="flex items-center gap-2 mb-2 px-1">
                 <span className="text-xs uppercase tracking-wide text-muted-foreground">Results</span>
-                <span className="px-1.5 py-0.5 rounded-md bg-panel-elevated text-xs text-foreground">{results.length}</span>
+                <span className="px-1.5 py-0.5 rounded-md bg-panel-elevated text-xs text-foreground">
+                  {isSearching ? "…" : results.length}
+                </span>
+                {ci && (
+                  <span className="ml-auto text-[11px] text-muted-foreground">
+                    Confidence range: {ci[0]}–{ci[1]}
+                  </span>
+                )}
               </div>
               <div className="space-y-2">
+                {isSearching && results.length === 0 && (
+                  <div className="rounded-xl border border-border-subtle bg-panel p-6 text-center text-xs text-muted-foreground">
+                    Searching…
+                  </div>
+                )}
+                {!isSearching && results.length === 0 && (
+                  <div className="rounded-xl border border-border-subtle bg-panel p-6 text-center text-xs text-muted-foreground">
+                    No facilities matched your query.
+                  </div>
+                )}
                 {results.map((f) => {
                   const flag = f.red_flags[0];
                   const isSelected = selected?.id === f.id;
                   return (
                     <button
                       key={f.id}
-                      onClick={() => pickFacility(f)}
+                      onClick={() => openFacility(f)}
                       className={cn(
                         "w-full text-left bg-panel border rounded-xl p-4 hover:bg-panel-elevated/60 transition-colors",
                         isSelected ? "border-primary/60" : "border-border-subtle",
@@ -186,7 +284,7 @@ const Search = () => {
               </div>
             </section>
 
-            {/* Agent Steps */}
+            {/* Agent Steps + query plan */}
             <aside className="rounded-xl border border-border-subtle bg-panel overflow-hidden h-fit">
               <div className="px-4 py-3 border-b border-border-subtle flex items-center gap-2">
                 <Sparkles className="h-3.5 w-3.5 text-primary" />
@@ -194,7 +292,7 @@ const Search = () => {
               </div>
               <ol className="p-3 space-y-2.5">
                 {agentSteps.map((s, i) => (
-                  <li key={s.title} className="flex items-start gap-2.5">
+                  <li key={i} className="flex items-start gap-2.5">
                     <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-panel-elevated text-[10px] font-medium text-foreground shrink-0">
                       {i + 1}
                     </span>
@@ -205,6 +303,24 @@ const Search = () => {
                   </li>
                 ))}
               </ol>
+              {queryPlan && (
+                <div className="border-t border-border-subtle p-3 space-y-1.5">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Query plan</p>
+                  <p className="text-xs text-foreground/85">
+                    Location: {queryPlan.location_filters.city ?? queryPlan.location_filters.state ?? "Any"}
+                  </p>
+                  {queryPlan.capability_filters.length > 0 && (
+                    <p className="text-xs text-foreground/85">
+                      Capabilities: {queryPlan.capability_filters.join(", ")}
+                    </p>
+                  )}
+                  {queryPlan.constraints.length > 0 && (
+                    <p className="text-xs text-foreground/85">
+                      Constraints: {queryPlan.constraints.join(", ")}
+                    </p>
+                  )}
+                </div>
+              )}
             </aside>
           </div>
         )}
@@ -222,12 +338,19 @@ const Search = () => {
                   <ArrowLeft className="h-4 w-4" />
                   Back to results
                 </button>
-                <button
-                  onClick={() => setShowMap((v) => !v)}
-                  className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-panel border border-border-subtle text-xs text-foreground hover:border-primary/40 transition-colors"
-                >
-                  {showMap ? (<><X className="h-3.5 w-3.5" /> Hide map</>) : (<><MapPin className="h-3.5 w-3.5" /> Show map</>)}
-                </button>
+                <div className="flex items-center gap-2">
+                  {isLoadingDetail && (
+                    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Loading details…
+                    </span>
+                  )}
+                  <button
+                    onClick={() => setShowMap((v) => !v)}
+                    className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-panel border border-border-subtle text-xs text-foreground hover:border-primary/40 transition-colors"
+                  >
+                    {showMap ? (<><X className="h-3.5 w-3.5" /> Hide map</>) : (<><MapPin className="h-3.5 w-3.5" /> Show map</>)}
+                  </button>
+                </div>
               </div>
 
               <div className={cn("grid gap-4", showMap ? "lg:grid-cols-[420px_1fr]" : "grid-cols-1 max-w-2xl mx-auto")}>
@@ -247,11 +370,12 @@ const Search = () => {
                       <SearchMap
                         mode="facilities"
                         selectedId={selected.id}
-                        resultIds={[selected.id]}
-                        onSelectFacility={() => {}}
+                        resultIds={mapResultIds}
+                        onSelectFacility={(f) => openFacility(f)}
                         onSelectDesert={() => {}}
                         flyTo={{ lat: selected.lat, lng: selected.lng, zoom: 11 }}
                         fitBounds={null}
+                        facilityList={mapFacilities}
                       />
                     </div>
                   </div>
