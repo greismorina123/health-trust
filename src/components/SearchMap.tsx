@@ -40,6 +40,8 @@ interface Props {
   flyTo: { lat: number; lng: number; zoom?: number } | null;
   /** When set, fitBounds to these coordinates. */
   fitBounds: Array<[number, number]> | null;
+  /** Optional override list of facilities (e.g., live API pins). Falls back to mock. */
+  facilityList?: Facility[];
 }
 
 const MapController = ({
@@ -72,14 +74,16 @@ export const SearchMap = ({
   onSelectDesert,
   flyTo,
   fitBounds,
+  facilityList,
 }: Props) => {
   const mapRef = useRef<LeafletMap | null>(null);
   const resultSet = useMemo(() => new Set(resultIds), [resultIds]);
   const { theme } = useTheme();
+  const facilitySource = facilityList && facilityList.length > 0 ? facilityList : facilities;
 
   const facilityMarkers = useMemo(
     () =>
-      facilities.map((f) => {
+      facilitySource.map((f) => {
         const isSelected = f.id === selectedId;
         const isResult = resultSet.has(f.id);
         const color = trustHsl(f.trust_score);
@@ -123,7 +127,7 @@ export const SearchMap = ({
           </LayerGroup>
         );
       }),
-    [selectedId, onSelectFacility, resultSet],
+    [selectedId, onSelectFacility, resultSet, facilitySource],
   );
 
   const desertMarkers = useMemo(
