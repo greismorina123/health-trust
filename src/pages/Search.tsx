@@ -175,57 +175,6 @@ const Search = () => {
                 </div>
               </section>
 
-              {/* Reasoning steps — moved to the end */}
-              <section className="bg-panel border border-border-subtle rounded-xl p-4">
-                <h2 className="text-xs uppercase tracking-wide text-muted-foreground mb-3">
-                  Agent Reasoning
-                </h2>
-                <div className="space-y-1.5">
-                  {chainOfThoughtSteps.map((step, i) => {
-                    const done = i < activeStep || stepsDone;
-                    const active = i === activeStep && !stepsDone;
-                    const pending = !done && !active;
-                    const isExpanded = expandedStep === i;
-                    return (
-                      <div
-                        key={step.title}
-                        className="bg-background border border-border-subtle rounded-lg fade-up"
-                        style={{ animationDelay: `${i * 80}ms` }}
-                      >
-                        <button
-                          onClick={() => setExpandedStep(isExpanded ? null : i)}
-                          className="w-full px-3 py-2 flex items-center gap-2 hover:bg-panel-elevated/50 transition-colors rounded-lg"
-                        >
-                          <span
-                            className={cn(
-                              "h-5 w-5 rounded-full flex items-center justify-center text-xs font-mono shrink-0",
-                              done && "bg-trust-high/20 text-trust-high",
-                              active && "bg-primary/20 text-primary animate-pulse",
-                              pending && "bg-panel-elevated text-muted-foreground",
-                            )}
-                          >
-                            {done ? "✓" : i + 1}
-                          </span>
-                          <span className="text-xs text-foreground font-medium flex-1 text-left">
-                            {step.title}
-                          </span>
-                          <ChevronDown
-                            className={cn(
-                              "h-3 w-3 text-muted-foreground transition-transform",
-                              isExpanded && "rotate-180",
-                            )}
-                          />
-                        </button>
-                        {isExpanded && (
-                          <p className="px-3 pb-2 text-xs text-muted-foreground/80 leading-relaxed">
-                            {step.detail}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
             </div>
 
             {/* Right rail: helper */}
