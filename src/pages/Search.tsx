@@ -117,18 +117,6 @@ const Search = () => {
           </div>
         </form>
 
-        {/* Chips */}
-        <div className="mt-3 flex flex-wrap gap-2">
-          {queryChips.map((c) => (
-            <button
-              key={c}
-              onClick={() => runChip(c)}
-              className="px-3 py-1.5 rounded-md bg-panel border border-border-subtle text-xs text-muted-foreground hover:border-primary/40 transition-colors"
-            >
-              {c}
-            </button>
-          ))}
-        </div>
 
         {/* Empty state */}
         {!submittedQuery && (
