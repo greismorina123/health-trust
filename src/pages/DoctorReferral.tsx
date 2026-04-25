@@ -434,6 +434,7 @@ const FacilityVerificationPanel = ({ facility, detail, isLoadingDetail, subScore
   const score = useCountUp(facility.trust_score, 800, facility.id);
   const apiCaution = cautionFromScore(facility.trust_score);
   const cs = cautionStyles[v?.referralCaution ?? apiCaution];
+  const [capabilitiesOpen, setCapabilitiesOpen] = useState(true);
 
   // Prefer real API data when present; fallback to local mock verifications.
   const apiCapabilities = detail?.capability_claims ?? [];
