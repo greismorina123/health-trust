@@ -278,7 +278,7 @@ const DoctorReferral = () => {
 
         {/* Results */}
         {submitted && (
-          <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_360px]">
+          <div className={cn("mt-6 grid gap-4", riskMapCollapsed ? "lg:grid-cols-[1fr_44px]" : "lg:grid-cols-[1fr_360px]")}>
             <section className="space-y-2">
               <div className="flex items-center gap-2 mb-1 px-1">
                 <span className="text-xs uppercase tracking-wide text-muted-foreground">Ranked results</span>
