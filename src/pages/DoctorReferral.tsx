@@ -302,38 +302,45 @@ const DoctorReferral = () => {
                     )}
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-sm font-medium text-foreground line-clamp-1">{f.name}</span>
-                      <span className={cn("text-xs font-bold rounded-md px-1.5 py-0.5 shrink-0", trustBadgeClass(f.trust_score))}>
+                      <div className="min-w-0 flex-1">
+                        <span className="block text-sm font-medium text-foreground line-clamp-1">{f.name}</span>
+                        <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          <span>{f.district}, {f.state}</span>
+                          <span className="text-muted-foreground/40">·</span>
+                          <span>{f.facility_type}</span>
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                          <span className={cn("text-[11px] inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 border", cs.cls)}>
+                            <span className={cn("h-1.5 w-1.5 rounded-full", cs.dot)} />
+                            {cs.label}
+                          </span>
+                          {v && (
+                            <span className="text-[11px] text-muted-foreground">
+                              {verified} verified · {missing} missing · {contradictions} contradictions
+                            </span>
+                          )}
+                        </div>
+                        {v?.recommendedFollowUp[0] && (
+                          <p className="mt-1.5 text-xs text-muted-foreground/80 line-clamp-1">
+                            Follow-up: {v.recommendedFollowUp[0]}
+                          </p>
+                        )}
+                        {apiHint && (
+                          <p className="mt-1.5 text-xs text-muted-foreground/80 line-clamp-1">
+                            {apiHint}
+                          </p>
+                        )}
+                      </div>
+                      <span
+                        className={cn(
+                          "shrink-0 inline-flex items-center justify-center h-12 w-12 rounded-full border-2 text-base font-bold",
+                          trustBadgeClass(f.trust_score),
+                        )}
+                      >
                         {f.trust_score}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
-                      <MapPin className="h-3 w-3 shrink-0" />
-                      <span>{f.district}, {f.state}</span>
-                      <span className="text-muted-foreground/40">·</span>
-                      <span>{f.facility_type}</span>
-                    </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                      <span className={cn("text-[11px] inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 border", cs.cls)}>
-                        <span className={cn("h-1.5 w-1.5 rounded-full", cs.dot)} />
-                        {cs.label}
-                      </span>
-                      {v && (
-                        <span className="text-[11px] text-muted-foreground">
-                          {verified} verified · {missing} missing · {contradictions} contradictions
-                        </span>
-                      )}
-                    </div>
-                    {v?.recommendedFollowUp[0] && (
-                      <p className="mt-1.5 text-xs text-muted-foreground/80 line-clamp-1">
-                        Follow-up: {v.recommendedFollowUp[0]}
-                      </p>
-                    )}
-                    {apiHint && (
-                      <p className="mt-1.5 text-xs text-muted-foreground/80 line-clamp-1">
-                        {apiHint}
-                      </p>
-                    )}
                   </button>
                 );
               })}
