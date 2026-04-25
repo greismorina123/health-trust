@@ -17,8 +17,6 @@ import {
   cautionStyles,
   capabilityStatusStyles,
   desertRegions as fallbackDesertRegions,
-  
-  SAFETY_NOTE,
   verifications,
 } from "@/data/roleData";
 import {

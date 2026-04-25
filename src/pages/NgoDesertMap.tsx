@@ -9,7 +9,6 @@ import {
   type RiskLevel,
   capabilityFilters,
   desertRegions as fallbackDesertRegions,
-  SAFETY_NOTE,
 } from "@/data/roleData";
 import { trustHsl } from "@/data/facilities";
 import { desertRegionFromDistrict, getDistricts } from "@/services/trustmapApi";
