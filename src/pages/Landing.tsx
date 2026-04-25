@@ -74,9 +74,6 @@ const Landing = () => {
               <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
                 Already have an account?
               </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Sign in to save searches and track facilities you trust.
-              </p>
             </div>
             <Link
               to="/login"
