@@ -183,18 +183,6 @@ const Search = () => {
           </div>
         </form>
 
-        {/* Query chips */}
-        <div className="mt-3 flex flex-wrap gap-2">
-          {userQueryChips.map((c) => (
-            <button
-              key={c}
-              onClick={() => runChip(c)}
-              className="px-3 h-7 rounded-full text-xs text-muted-foreground bg-panel border border-border-subtle hover:text-foreground hover:border-primary/40 transition-colors"
-            >
-              {c}
-            </button>
-          ))}
-        </div>
 
         {/* Safety note */}
         <div className="mt-4 rounded-lg border border-border-subtle bg-panel/60 px-3.5 py-2.5 flex items-start gap-2">
