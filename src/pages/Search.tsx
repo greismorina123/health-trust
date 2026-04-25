@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ChevronDown, Search as SearchIcon, AlertTriangle, MapPin, X, ArrowLeft } from "lucide-react";
+import { Search as SearchIcon, AlertTriangle, MapPin, X, ArrowLeft } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { SearchMap } from "@/components/SearchMap";
 import { FacilityDetail } from "@/components/FacilityDetail";
 import {
   type Facility,
-  chainOfThoughtSteps,
   facilities,
   trustTier,
 } from "@/data/facilities";
