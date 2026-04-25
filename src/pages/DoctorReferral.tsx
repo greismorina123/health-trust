@@ -552,25 +552,7 @@ const FacilityVerificationPanel = ({ facility, detail, isLoadingDetail, subScore
         </section>
       )}
 
-      {/* Evidence Trace */}
-      <section className="p-5 border-b border-border-subtle">
-        <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-3">
-          Evidence Trace
-        </h3>
-        <ol className="space-y-2">
-          {facility.claims.map((cl, i) => (
-            <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
-              <span className="mt-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-panel-elevated text-[10px] text-foreground/80 shrink-0">
-                {i + 1}
-              </span>
-              <span>
-                <span className="text-foreground/90">{cl.claim}</span>{" "}
-                <span className="text-muted-foreground/70 italic">— {cl.source_text}</span>
-              </span>
-            </li>
-          ))}
-        </ol>
-      </section>
+      {/* Evidence Trace removed */}
 
       {/* Contradictions — prefer API data */}
       {(apiContradictions.length > 0 || (v && v.contradictions.length > 0)) && (
