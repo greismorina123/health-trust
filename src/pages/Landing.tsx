@@ -86,7 +86,7 @@ const Landing = () => {
 
         <section className="max-w-3xl mx-auto mt-20 fade-up">
           <div className="mb-12">
-            <span className="text-primary text-xs font-medium tracking-widest uppercase">
+            <span className="text-primary text-sm sm:text-base font-medium tracking-widest uppercase">
               How it works
             </span>
           </div>
