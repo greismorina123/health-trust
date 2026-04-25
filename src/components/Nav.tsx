@@ -91,7 +91,7 @@ export const Nav = ({ variant = "app" }: Props) => {
         ) : (
           <div className="flex items-center gap-2">
             <BackendStatusDot />
-            <RoleSwitcher />
+            <RoleBadge />
             <ThemeToggle />
           </div>
         )}
