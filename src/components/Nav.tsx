@@ -1,6 +1,9 @@
-import { Link } from "react-router-dom";
-import { MapPin, Moon, Sun, User } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { MapPin, Moon, Sun, ChevronDown, User, Stethoscope, Building2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
+import { dashboardPathFor, useRole, type Role } from "@/context/RoleContext";
+import { cn } from "@/lib/utils";
 
 interface Props {
   variant?: "landing" | "app";
@@ -17,6 +20,75 @@ const ThemeToggle = () => {
     >
       {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
     </button>
+  );
+};
+
+const roleMeta: Record<Role, { label: string; icon: typeof User }> = {
+  user: { label: "User", icon: User },
+  doctor: { label: "Doctor", icon: Stethoscope },
+  ngo: { label: "NGO", icon: Building2 },
+};
+
+const RoleSwitcher = () => {
+  const { role, setRole } = useRole();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    window.addEventListener("mousedown", onClick);
+    return () => window.removeEventListener("mousedown", onClick);
+  }, [open]);
+
+  const Current = roleMeta[role].icon;
+
+  const choose = (r: Role) => {
+    setRole(r);
+    setOpen(false);
+    navigate(dashboardPathFor(r));
+  };
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="h-7 pl-2 pr-1.5 inline-flex items-center gap-1.5 rounded-full bg-panel-elevated border border-border-subtle text-xs text-foreground hover:border-primary/40 transition-colors"
+        title="Switch demo role"
+      >
+        <Current className="h-3 w-3 text-muted-foreground" />
+        <span className="font-medium">{roleMeta[role].label}</span>
+        <ChevronDown className="h-3 w-3 text-muted-foreground" />
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-1 w-44 rounded-lg border border-border-subtle bg-popover shadow-lg overflow-hidden fade-up">
+          <div className="px-3 py-2 border-b border-border-subtle">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Demo account</p>
+          </div>
+          {(Object.keys(roleMeta) as Role[]).map((r) => {
+            const Icon = roleMeta[r].icon;
+            const active = r === role;
+            return (
+              <button
+                key={r}
+                onClick={() => choose(r)}
+                className={cn(
+                  "w-full flex items-center gap-2 px-3 py-2 text-xs text-left hover:bg-panel-elevated transition-colors",
+                  active && "bg-panel-elevated/60",
+                )}
+              >
+                <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-foreground font-medium">{roleMeta[r].label}</span>
+                {active && <span className="ml-auto text-[10px] text-primary">current</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -40,15 +112,9 @@ export const Nav = ({ variant = "app" }: Props) => {
             </Link>
           </div>
         ) : (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <RoleSwitcher />
             <ThemeToggle />
-            <Link
-              to="/signup"
-              title="Sign In"
-              className="h-7 w-7 rounded-full bg-panel-elevated border border-border-subtle flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <User className="h-3.5 w-3.5" />
-            </Link>
           </div>
         )}
       </div>
