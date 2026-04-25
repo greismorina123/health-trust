@@ -16,6 +16,7 @@ import {
   facilities,
   trustHsl,
 } from "@/data/facilities";
+import { useTheme } from "@/components/ThemeProvider";
 
 const INDIA_CENTER: [number, number] = [22.0, 79.0];
 const INDIA_BOUNDS: LatLngBoundsExpression = [
@@ -74,6 +75,7 @@ export const SearchMap = ({
 }: Props) => {
   const mapRef = useRef<LeafletMap | null>(null);
   const resultSet = useMemo(() => new Set(resultIds), [resultIds]);
+  const { theme } = useTheme();
 
   const facilityMarkers = useMemo(
     () =>
