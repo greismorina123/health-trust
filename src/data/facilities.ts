@@ -26,6 +26,7 @@ export interface Facility {
   state: string;
   facility_type: string;
   trust_score: number;
+  confidence_interval: [number, number];
   sub_scores: SubScores;
   summary: string;
   lat: number;
