@@ -352,15 +352,6 @@ const RegionDetail = ({ region, onCollapse }: { region: DesertRegion; onCollapse
         <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Recommended follow-up</p>
         <p className="mt-1 text-xs text-foreground/85 leading-relaxed">{region.recommendedFollowUp}</p>
       </div>
-
-      <button
-        disabled
-        title="Coming soon"
-        className="w-full h-9 inline-flex items-center justify-center gap-1.5 rounded-lg bg-panel-elevated border border-border-subtle text-xs text-foreground/80 hover:border-primary/40 transition-colors"
-      >
-        <Download className="h-3.5 w-3.5" />
-        Export NGO Risk Report
-      </button>
     </div>
   </aside>
 );
