@@ -1,8 +1,10 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { Navigate } from "react-router-dom";
 import { Search as SearchIcon, AlertTriangle, MapPin, ShieldAlert, ArrowLeft, ChevronDown, Stethoscope, Loader2 } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { SearchMap } from "@/components/SearchMap";
 import { Disclaimer } from "@/components/Disclaimer";
+import { dashboardPathFor, useRole } from "@/context/RoleContext";
 import {
   type Facility,
   facilities as fallbackFacilities,
@@ -55,6 +57,7 @@ const cautionFromScore = (score: number): ReferralCaution => {
 };
 
 const DoctorReferral = () => {
+  const { role } = useRole();
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState<string | null>(null);
   const [results, setResults] = useState<Facility[]>([]);
@@ -151,6 +154,8 @@ const DoctorReferral = () => {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [selected]);
+
+  if (role !== "doctor") return <Navigate to={dashboardPathFor(role)} replace />;
 
   return (
     <div className="min-h-screen bg-background">

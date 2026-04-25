@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { Building2, Download, Filter } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { DesertMap } from "@/components/DesertMap";
 import { Disclaimer } from "@/components/Disclaimer";
+import { dashboardPathFor, useRole } from "@/context/RoleContext";
 import {
   type CapabilityKey,
   type DesertRegion,
@@ -22,6 +24,7 @@ const riskBadge = (level: RiskLevel) =>
       : "bg-trust-high/15 text-trust-high border-trust-high/30";
 
 const NgoDesertMap = () => {
+  const { role } = useRole();
   const [capability, setCapability] = useState<CapabilityKey | "all">("all");
   const [state, setState] = useState<string>("all");
   const [trustThreshold, setTrustThreshold] = useState<number>(0);
@@ -75,6 +78,8 @@ const NgoDesertMap = () => {
     () => filtered.find((r) => r.id === selectedId) ?? filtered[0] ?? null,
     [filtered, selectedId],
   );
+
+  if (role !== "ngo") return <Navigate to={dashboardPathFor(role)} replace />;
 
   return (
     <div className="min-h-screen bg-background">
