@@ -28,6 +28,7 @@ const NgoDesertMap = () => {
   const [ruralOnly, setRuralOnly] = useState(false);
   const [minCompleteness, setMinCompleteness] = useState(0);
   const [desertRegions, setDesertRegions] = useState<DesertRegion[]>(fallbackDesertRegions);
+  const [detailCollapsed, setDetailCollapsed] = useState(false);
   const [selectedId, setSelectedId] = useState<string>(fallbackDesertRegions[0].id);
   const [isLoading, setIsLoading] = useState(true);
 
