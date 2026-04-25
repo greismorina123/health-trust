@@ -32,9 +32,6 @@ export const Nav = ({ variant = "app" }: Props) => {
         {variant === "landing" ? (
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Sign In
-            </Link>
             <Link
               to="/signup"
               className="h-9 px-4 inline-flex items-center rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
