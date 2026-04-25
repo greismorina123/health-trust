@@ -191,6 +191,21 @@ const DoctorReferral = () => {
           </div>
         </form>
 
+        {/* Facility suggestions from the dataset */}
+        <div className="fade-up mt-3 flex flex-wrap items-center gap-2">
+          <span className="text-xs text-muted-foreground/70">Try:</span>
+          {fallbackFacilities.slice(0, 4).map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => runChip(f.name)}
+              className="px-2.5 py-1 rounded-full border border-border-subtle bg-panel hover:bg-panel-elevated/60 text-xs text-foreground/80 transition-colors"
+            >
+              {f.name}
+            </button>
+          ))}
+        </div>
+
 
         {searchError && (
           <div className="mt-3 rounded-lg border border-trust-low/30 bg-trust-low/5 px-3.5 py-2 text-xs text-trust-low">
