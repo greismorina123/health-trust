@@ -3,23 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { Disclaimer } from "@/components/Disclaimer";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  CARE_OPTIONS,
-  LOCATION_OPTIONS,
-  TRUST_OPTIONS,
-  defaultFilters,
-  filtersToParams,
-  type CareKey,
-  type LocationKey,
-  type TrustKey,
-} from "@/lib/searchFilters";
 
 const exampleChips = [
   "C-section in rural Maharashtra",
@@ -31,16 +14,11 @@ const exampleChips = [
 const Landing = () => {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
-  const [filters, setFilters] = useState(defaultFilters);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const target = q.trim();
-    const sp = new URLSearchParams();
-    if (target) sp.set("q", target);
-    for (const [k, v] of Object.entries(filtersToParams(filters))) sp.set(k, v);
-    const qs = sp.toString();
-    navigate(qs ? `/search?${qs}` : "/search");
+    navigate(target ? `/search?q=${encodeURIComponent(target)}` : "/search");
   };
 
   return (
