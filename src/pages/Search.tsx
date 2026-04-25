@@ -177,11 +177,31 @@ const Search = () => {
 
   const ci = queryResponse?.confidence_interval;
 
+  // Apply trust-level filter on the frontend after API returns.
+  const filteredResults = useMemo(
+    () => applyTrustFilter(results, submittedFilters.trust),
+    [results, submittedFilters.trust],
+  );
+
   if (role !== "user") return <Navigate to={dashboardPathFor(role)} replace />;
 
   // Map source: results when searched, otherwise initial pins
-  const mapFacilities = submittedQuery && results.length ? results : pins;
-  const mapResultIds = submittedQuery ? results.map((r) => r.id) : [];
+  const mapFacilities = submittedQuery && filteredResults.length ? filteredResults : pins;
+  const mapResultIds = submittedQuery ? filteredResults.map((r) => r.id) : [];
+
+  const activeChips: { key: keyof FilterState; label: string }[] = [];
+  if (submittedFilters.location !== "any") {
+    const o = LOCATION_OPTIONS.find((x) => x.value === submittedFilters.location);
+    if (o) activeChips.push({ key: "location", label: o.label });
+  }
+  if (submittedFilters.care !== "any") {
+    const o = CARE_OPTIONS.find((x) => x.value === submittedFilters.care);
+    if (o) activeChips.push({ key: "care", label: o.label });
+  }
+  if (submittedFilters.trust !== "any") {
+    const o = TRUST_OPTIONS.find((x) => x.value === submittedFilters.trust);
+    if (o) activeChips.push({ key: "trust", label: o.label });
+  }
 
   return (
     <div className="min-h-screen bg-background">
