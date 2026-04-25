@@ -68,6 +68,87 @@ const Landing = () => {
           </div>
         </section>
 
+        <section className="max-w-3xl mx-auto mt-32 fade-up">
+          <div className="mb-12">
+            <span className="text-primary text-xs font-medium tracking-widest uppercase">
+              How it works
+            </span>
+            <h2 className="mt-3 text-2xl sm:text-3xl font-medium text-foreground">
+              A clearer way to choose care.
+            </h2>
+          </div>
+
+          <div className="divide-y divide-border-subtle border-y border-border-subtle">
+            <div className="grid grid-cols-[48px_1fr] sm:grid-cols-[60px_1fr] gap-6 py-7">
+              <span className="text-muted-foreground text-sm font-mono">01</span>
+              <div>
+                <h3 className="text-base font-medium text-foreground mb-1">
+                  Ask what kind of care you need
+                </h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  TrustMap finds nearby facilities and checks whether their claims look reliable.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-[48px_1fr] sm:grid-cols-[60px_1fr] gap-6 py-7">
+              <span className="text-muted-foreground text-sm font-mono">02</span>
+              <div>
+                <h3 className="text-base font-medium text-foreground mb-2">
+                  Each facility gets a simple Trust Score
+                </h3>
+                <div className="space-y-1.5 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="size-2 rounded-full bg-trust-high" />
+                    <span>
+                      <span className="text-foreground">Green</span>{" "}
+                      <span className="text-muted-foreground">— likely reliable</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="size-2 rounded-full bg-trust-mid" />
+                    <span>
+                      <span className="text-foreground">Yellow</span>{" "}
+                      <span className="text-muted-foreground">— uncertain</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="size-2 rounded-full bg-trust-low" />
+                    <span>
+                      <span className="text-foreground">Red</span>{" "}
+                      <span className="text-muted-foreground">— risky or incomplete</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-[48px_1fr] sm:grid-cols-[60px_1fr] gap-6 py-7">
+              <span className="text-muted-foreground text-sm font-mono">03</span>
+              <div>
+                <h3 className="text-base font-medium text-foreground mb-1">
+                  Click a facility for the full picture
+                </h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  See what supports the score, what is missing, and what should be verified.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-[48px_1fr] sm:grid-cols-[60px_1fr] gap-6 py-7">
+              <span className="text-muted-foreground text-sm font-mono">04</span>
+              <div>
+                <h3 className="text-base font-medium text-foreground mb-1">
+                  Use the heatmap
+                </h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Spot areas where critical care is hard to find.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <footer className="mt-24 text-center text-xs text-muted-foreground/60">
           MIT Hackathon 2025 · Powered by Databricks, Claude, Tavily
         </footer>
