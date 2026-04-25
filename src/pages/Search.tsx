@@ -68,7 +68,10 @@ const Search = () => {
     try {
       const resp = await searchFacilities(q);
       setQueryResponse(resp);
-      const mapped = resp.results.map(facilityFromSearchResult);
+      // Filter out non-facility entries (e.g. district/desert results) which lack coords/id
+      const mapped = resp.results
+        .filter((r: any) => r && r.facility_id && Number.isFinite(r.latitude) && Number.isFinite(r.longitude))
+        .map(facilityFromSearchResult);
       setResults(mapped);
       // Auto-open the highest-ranked facility in the drawer
       const top = mapped[0];

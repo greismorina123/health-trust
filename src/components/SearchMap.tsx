@@ -79,7 +79,11 @@ export const SearchMap = ({
   const mapRef = useRef<LeafletMap | null>(null);
   const resultSet = useMemo(() => new Set(resultIds), [resultIds]);
   const { theme } = useTheme();
-  const facilitySource = facilityList && facilityList.length > 0 ? facilityList : facilities;
+  const rawSource = facilityList && facilityList.length > 0 ? facilityList : facilities;
+  const facilitySource = useMemo(
+    () => rawSource.filter((f) => Number.isFinite(f.lat) && Number.isFinite(f.lng)),
+    [rawSource],
+  );
 
   const facilityMarkers = useMemo(
     () =>
