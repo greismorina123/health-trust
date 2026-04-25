@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Search as SearchIcon, AlertTriangle, MapPin, ShieldAlert, ArrowLeft, ChevronDown, Stethoscope } from "lucide-react";
+import { Search as SearchIcon, AlertTriangle, MapPin, ShieldAlert, ArrowLeft, ChevronDown, Stethoscope, Loader2 } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { SearchMap } from "@/components/SearchMap";
 import {
   type Facility,
-  facilities,
+  facilities as fallbackFacilities,
   trustTier,
   trustHsl,
   trustTextClass,
@@ -12,13 +12,23 @@ import {
 } from "@/data/facilities";
 import {
   type DesertRegion,
+  type ReferralCaution,
   cautionStyles,
   capabilityStatusStyles,
-  desertRegions,
+  desertRegions as fallbackDesertRegions,
   doctorQueryChips,
   SAFETY_NOTE,
   verifications,
 } from "@/data/roleData";
+import {
+  type FacilityDetailApi,
+  desertRegionFromDistrict,
+  facilityFromDetail,
+  facilityFromSearchResult,
+  getDistricts,
+  getFacilityDetail,
+  searchFacilities,
+} from "@/services/trustmapApi";
 import { useCountUp } from "@/hooks/useCountUp";
 import { cn } from "@/lib/utils";
 
@@ -36,19 +46,54 @@ const subScoreLabels: Array<[keyof Facility["sub_scores"], string]> = [
   ["completeness", "Completeness"],
 ];
 
-const referralRiskRegions = desertRegions.filter((r) => r.riskLevel === "high");
+/** Map a 0–100 trust score to a referral caution label per spec. */
+const cautionFromScore = (score: number): ReferralCaution => {
+  if (score > 70) return "Good referral option";
+  if (score >= 50) return "Use with caution";
+  if (score >= 40) return "Verify before referral";
+  return "Not recommended";
+};
 
 const DoctorReferral = () => {
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState<string | null>(null);
+  const [results, setResults] = useState<Facility[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Facility | null>(null);
-  const [region, setRegion] = useState<DesertRegion>(referralRiskRegions[0]);
+  const [selectedDetail, setSelectedDetail] = useState<FacilityDetailApi | null>(null);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const [referralRegions, setReferralRegions] = useState<DesertRegion[]>(
+    fallbackDesertRegions.filter((r) => r.riskLevel === "high"),
+  );
+  const [region, setRegion] = useState<DesertRegion>(
+    fallbackDesertRegions.filter((r) => r.riskLevel === "high")[0],
+  );
   const [subScoresOpen, setSubScoresOpen] = useState(false);
 
-  const results = useMemo(
-    () => (submitted ? [...facilities].sort((a, b) => b.trust_score - a.trust_score) : []),
-    [submitted],
-  );
+  // Load district risk regions from API
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const districts = await getDistricts();
+        if (cancelled) return;
+        const mapped = districts
+          .map(desertRegionFromDistrict)
+          .sort((a, b) => b.riskScore - a.riskScore)
+          .slice(0, 8);
+        if (mapped.length > 0) {
+          setReferralRegions(mapped);
+          setRegion(mapped[0]);
+        }
+      } catch {
+        // keep fallback
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
