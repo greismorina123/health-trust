@@ -43,6 +43,15 @@ const Search = () => {
     }
   }, [submittedQuery, results, selected]);
 
+  useEffect(() => {
+    if (!selected) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelected(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selected]);
+
   // Redirect non-user roles to their own dashboard.
   if (role !== "user") return <Navigate to={dashboardPathFor(role)} replace />;
 
@@ -67,15 +76,6 @@ const Search = () => {
     setShowMap(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
-  useEffect(() => {
-    if (!selected) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelected(null);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [selected]);
 
   const top = results[0];
   const agentSteps = submittedQuery && top
