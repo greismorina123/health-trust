@@ -357,14 +357,22 @@ const DoctorReferral = () => {
 
 interface PanelProps {
   facility: Facility;
+  detail: FacilityDetailApi | null;
+  isLoadingDetail: boolean;
   subScoresOpen: boolean;
   setSubScoresOpen: (b: boolean) => void;
 }
 
-const FacilityVerificationPanel = ({ facility, subScoresOpen, setSubScoresOpen }: PanelProps) => {
+const FacilityVerificationPanel = ({ facility, detail, isLoadingDetail, subScoresOpen, setSubScoresOpen }: PanelProps) => {
   const v = verifications[facility.id];
   const score = useCountUp(facility.trust_score, 800, facility.id);
-  const cs = cautionStyles[v?.referralCaution ?? "Verify before referral"];
+  const apiCaution = cautionFromScore(facility.trust_score);
+  const cs = cautionStyles[v?.referralCaution ?? apiCaution];
+
+  // Prefer real API data when present; fallback to local mock verifications.
+  const apiCapabilities = detail?.capability_claims ?? [];
+  const apiContradictions = detail?.contradictions ?? [];
+  const ci = detail?.confidence_interval ?? facility.confidence_interval;
 
   return (
     <div className="bg-panel border border-border-subtle rounded-xl overflow-hidden">
