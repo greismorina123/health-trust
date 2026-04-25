@@ -54,8 +54,11 @@ const Search = () => {
   const navigate = useNavigate();
 
   const initialQ = params.get("q") ?? "";
+  const initialFilters = filtersFromParams(params);
   const [query, setQuery] = useState(initialQ);
+  const [filters, setFilters] = useState<FilterState>(initialFilters);
   const [submittedQuery, setSubmittedQuery] = useState<string | null>(initialQ || null);
+  const [submittedFilters, setSubmittedFilters] = useState<FilterState>(initialFilters);
   const [selected, setSelected] = useState<Facility | null>(null);
   const [showMap, setShowMap] = useState(true);
 
