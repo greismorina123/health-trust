@@ -70,6 +70,7 @@ const DoctorReferral = () => {
     fallbackDesertRegions.filter((r) => r.riskLevel === "high")[0],
   );
   const [subScoresOpen, setSubScoresOpen] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
 
   // Load district risk regions from API
   useEffect(() => {
@@ -174,37 +175,68 @@ const DoctorReferral = () => {
 
         {/* Clinical search */}
         <form onSubmit={submit} className="fade-up">
-          <div className="relative h-12 rounded-xl bg-panel border border-border-subtle flex items-center pl-4 pr-1.5 focus-within:border-primary/50 transition-colors">
-            <SearchIcon className="h-4 w-4 text-muted-foreground mr-2 shrink-0" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search for a referral-ready facility…"
-              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none min-w-0"
-            />
-            <button
-              type="submit"
-              className="h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity shrink-0"
-            >
-              Search
-            </button>
+          <div className="relative">
+            <div className="relative h-12 rounded-xl bg-panel border border-border-subtle flex items-center pl-4 pr-1.5 focus-within:border-primary/50 transition-colors">
+              <SearchIcon className="h-4 w-4 text-muted-foreground mr-2 shrink-0" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
+                placeholder="Search for a referral-ready facility…"
+                className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none min-w-0"
+              />
+              <button
+                type="submit"
+                className="h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity shrink-0"
+              >
+                Search
+              </button>
+            </div>
+
+            {searchFocused && (() => {
+              const q = query.trim().toLowerCase();
+              const suggestions = fallbackFacilities
+                .filter((f) =>
+                  q === ""
+                    ? true
+                    : f.name.toLowerCase().includes(q) ||
+                      f.district.toLowerCase().includes(q) ||
+                      f.state.toLowerCase().includes(q),
+                )
+                .slice(0, 6);
+              if (suggestions.length === 0) return null;
+              return (
+                <div className="absolute left-0 right-0 top-full mt-1.5 z-20 rounded-xl border border-border-subtle bg-panel shadow-lg overflow-hidden">
+                  <p className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground/70 border-b border-border-subtle">
+                    Suggested facilities
+                  </p>
+                  <ul>
+                    {suggestions.map((f) => (
+                      <li key={f.id}>
+                        <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            runChip(f.name);
+                            setSearchFocused(false);
+                          }}
+                          className="w-full text-left px-3 py-2 hover:bg-panel-elevated/60 transition-colors flex items-center gap-2"
+                        >
+                          <SearchIcon className="h-3 w-3 text-muted-foreground/60 shrink-0" />
+                          <span className="text-sm text-foreground/90 line-clamp-1">{f.name}</span>
+                          <span className="ml-auto text-xs text-muted-foreground/70 shrink-0">
+                            {f.district}, {f.state}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })()}
           </div>
         </form>
-
-        {/* Facility suggestions from the dataset */}
-        <div className="fade-up mt-3 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground/70">Try:</span>
-          {fallbackFacilities.slice(0, 4).map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => runChip(f.name)}
-              className="px-2.5 py-1 rounded-full border border-border-subtle bg-panel hover:bg-panel-elevated/60 text-xs text-foreground/80 transition-colors"
-            >
-              {f.name}
-            </button>
-          ))}
-        </div>
 
 
         {searchError && (
