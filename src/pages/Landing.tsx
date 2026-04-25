@@ -42,7 +42,7 @@ const Landing = () => {
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Ask anything — e.g. 'Emergency obstetrics in rural Bihar'"
+                placeholder="Ask anything…"
                 className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
               />
               <button
