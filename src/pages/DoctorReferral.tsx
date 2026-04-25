@@ -390,11 +390,19 @@ const FacilityVerificationPanel = ({ facility, detail, isLoadingDetail, subScore
             <div className="text-xs text-muted-foreground mt-1">Trust Score</div>
           </div>
         </div>
-        <div className="mt-3">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className={cn("inline-flex items-center gap-1.5 text-xs rounded-md px-2 py-1 border", cs.cls)}>
             <span className={cn("h-1.5 w-1.5 rounded-full", cs.dot)} />
             {cs.label}
           </span>
+          <span className="text-[11px] text-muted-foreground">
+            Confidence range: {ci[0]}–{ci[1]}
+          </span>
+          {isLoadingDetail && (
+            <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+              <Loader2 className="h-3 w-3 animate-spin" /> Loading details…
+            </span>
+          )}
         </div>
       </header>
 
@@ -428,27 +436,52 @@ const FacilityVerificationPanel = ({ facility, detail, isLoadingDetail, subScore
         )}
       </section>
 
-      {/* Capability Verification */}
-      {v && (
+      {/* Capability Verification — prefer API data, fall back to mock */}
+      {(apiCapabilities.length > 0 || v) && (
         <section className="p-5 border-b border-border-subtle">
           <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-3">
             Capability Verification
           </h3>
           <ul className="space-y-2.5">
-            {v.capabilities.map((c) => (
-              <li key={c.name} className="rounded-lg border border-border-subtle bg-background/40 p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm text-foreground font-medium">{c.name}</span>
-                  <span className={cn("text-[11px] font-medium rounded-md px-1.5 py-0.5", capabilityStatusStyles[c.status])}>
-                    {c.status}
-                  </span>
-                </div>
-                <div className="mt-1.5 text-xs text-muted-foreground">
-                  Source field: <span className="text-foreground/80">{c.sourceField}</span>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground/80 italic line-clamp-2">{c.evidenceSnippet}</p>
-              </li>
-            ))}
+            {apiCapabilities.length > 0
+              ? apiCapabilities.map((c, i) => {
+                  const status =
+                    c.status === "confirmed"
+                      ? "Verified"
+                      : c.status === "inferred"
+                        ? "Inferred"
+                        : c.status === "contradicted"
+                          ? "Contradicted"
+                          : "Unknown";
+                  return (
+                    <li key={`${c.capability}-${i}`} className="rounded-lg border border-border-subtle bg-background/40 p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm text-foreground font-medium capitalize">{c.capability}</span>
+                        <span className={cn("text-[11px] font-medium rounded-md px-1.5 py-0.5", capabilityStatusStyles[status])}>
+                          {status}
+                        </span>
+                      </div>
+                      <div className="mt-1.5 text-xs text-muted-foreground">
+                        Source field: <span className="text-foreground/80">{c.evidence_field}</span>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground/80 italic line-clamp-2">{c.evidence_snippet}</p>
+                    </li>
+                  );
+                })
+              : v!.capabilities.map((c) => (
+                  <li key={c.name} className="rounded-lg border border-border-subtle bg-background/40 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm text-foreground font-medium">{c.name}</span>
+                      <span className={cn("text-[11px] font-medium rounded-md px-1.5 py-0.5", capabilityStatusStyles[c.status])}>
+                        {c.status}
+                      </span>
+                    </div>
+                    <div className="mt-1.5 text-xs text-muted-foreground">
+                      Source field: <span className="text-foreground/80">{c.sourceField}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground/80 italic line-clamp-2">{c.evidenceSnippet}</p>
+                  </li>
+                ))}
           </ul>
         </section>
       )}
