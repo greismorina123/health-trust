@@ -174,6 +174,21 @@
   font-size: 12px !important;
 }
 
+/* Themed map tooltip — readable in both light and dark modes */
+.leaflet-tooltip.desert-tooltip {
+  background: hsl(var(--panel)) !important;
+  color: hsl(var(--foreground)) !important;
+  border: 1px solid hsl(var(--border-subtle)) !important;
+  border-radius: 8px !important;
+  padding: 8px 10px !important;
+  font-size: 13px !important;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.25) !important;
+  white-space: nowrap;
+}
+.leaflet-tooltip.desert-tooltip::before {
+  border-top-color: hsl(var(--border-subtle)) !important;
+}
+
 @layer utilities {
   .fade-up {
     animation: fade-up 320ms ease-out both;
