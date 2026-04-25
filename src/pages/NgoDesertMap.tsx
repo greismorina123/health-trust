@@ -69,7 +69,7 @@ const NgoDesertMap = () => {
       if (r.dataCompleteness < minCompleteness) return false;
       return true;
     });
-  }, [capability, state, trustThreshold, ruralOnly, minCompleteness]);
+  }, [desertRegions, capability, state, trustThreshold, ruralOnly, minCompleteness]);
 
   const selected = useMemo(
     () => filtered.find((r) => r.id === selectedId) ?? filtered[0] ?? null,
