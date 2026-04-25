@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { Search as SearchIcon, AlertTriangle, MapPin, X, ArrowLeft, Sparkles, Loader2, ChevronDown } from "lucide-react";
+import { Search as SearchIcon, AlertTriangle, MapPin, X, ArrowLeft, Loader2 } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { SearchMap } from "@/components/SearchMap";
 import { FacilityDetail } from "@/components/FacilityDetail";
@@ -37,7 +37,6 @@ const Search = () => {
   const [submittedQuery, setSubmittedQuery] = useState<string | null>(initialQ || null);
   const [selected, setSelected] = useState<Facility | null>(null);
   const [showMap, setShowMap] = useState(true);
-  const [agentStepsOpen, setAgentStepsOpen] = useState(false);
 
   const [pins, setPins] = useState<Facility[]>([]);
   const [results, setResults] = useState<Facility[]>([]);
@@ -133,27 +132,6 @@ const Search = () => {
     }
   };
 
-  // Build agent steps from API reasoning_steps if present, else from local heuristics.
-  const top = results[0];
-  const agentSteps = useMemo(() => {
-    if (!submittedQuery) return [];
-    if (queryResponse?.reasoning_steps?.length) {
-      return queryResponse.reasoning_steps.map((s, i) => ({
-        title: `Step ${i + 1}`,
-        detail: s,
-      }));
-    }
-    if (!top) return [];
-    return [
-      { title: "What care was requested", detail: submittedQuery },
-      { title: "What location was searched", detail: "Across India" },
-      { title: "What facilities were found", detail: `${results.length} candidate facilities matched` },
-      { title: "What risks were detected", detail: top.red_flags[0] ?? "No major risks flagged" },
-      { title: "Best available option", detail: `${top.name} — Trust Score ${top.trust_score}` },
-    ];
-  }, [submittedQuery, queryResponse, top, results.length]);
-
-  const queryPlan = queryResponse?.query_plan;
   const ci = queryResponse?.confidence_interval;
 
   if (role !== "user") return <Navigate to={dashboardPathFor(role)} replace />;
@@ -210,9 +188,9 @@ const Search = () => {
           </div>
         )}
 
-        {/* Agent Steps + Results */}
+        {/* Results */}
         {submittedQuery && (
-          <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_320px]">
+          <div className="mt-6">
             <section>
               <div className="flex items-center gap-2 mb-2 px-1">
                 <span className="text-xs uppercase tracking-wide text-muted-foreground">Results</span>
@@ -271,63 +249,6 @@ const Search = () => {
                 })}
               </div>
             </section>
-
-            {/* Agent Steps + query plan */}
-            <aside className="rounded-xl border border-border-subtle bg-panel overflow-hidden h-fit">
-              <button
-                type="button"
-                onClick={() => setAgentStepsOpen((v) => !v)}
-                className="w-full px-4 py-3 border-b border-border-subtle flex items-center gap-2 hover:bg-panel-elevated/40 transition-colors"
-                aria-expanded={agentStepsOpen}
-              >
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
-                <span className="text-xs font-medium text-foreground">Agent Steps</span>
-                <span className="ml-auto inline-flex items-center gap-1.5">
-                  <span className="text-[10px] text-muted-foreground">{agentSteps.length} steps</span>
-                  <ChevronDown
-                    className={cn(
-                      "h-3.5 w-3.5 text-muted-foreground transition-transform",
-                      agentStepsOpen && "rotate-180",
-                    )}
-                  />
-                </span>
-              </button>
-              {agentStepsOpen && (
-                <>
-                  <ol className="p-3 space-y-2.5">
-                    {agentSteps.map((s, i) => (
-                      <li key={i} className="flex items-start gap-2.5">
-                        <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-panel-elevated text-[10px] font-medium text-foreground shrink-0">
-                          {i + 1}
-                        </span>
-                        <div>
-                          <p className="text-xs font-medium text-foreground">{s.title}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{s.detail}</p>
-                        </div>
-                      </li>
-                    ))}
-                  </ol>
-                  {queryPlan && (
-                    <div className="border-t border-border-subtle p-3 space-y-1.5">
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Query plan</p>
-                      <p className="text-xs text-foreground/85">
-                        Location: {queryPlan.location_filters.city ?? queryPlan.location_filters.state ?? "Any"}
-                      </p>
-                      {queryPlan.capability_filters.length > 0 && (
-                        <p className="text-xs text-foreground/85">
-                          Capabilities: {queryPlan.capability_filters.join(", ")}
-                        </p>
-                      )}
-                      {queryPlan.constraints.length > 0 && (
-                        <p className="text-xs text-foreground/85">
-                          Constraints: {queryPlan.constraints.join(", ")}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-            </aside>
           </div>
         )}
 
