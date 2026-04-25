@@ -20,7 +20,7 @@ export const Nav = ({ variant = "app" }: Props) => {
               Sign In
             </Link>
             <Link
-              to="/search"
+              to="/signup"
               className="h-9 px-4 inline-flex items-center rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
             >
               Get Started
@@ -32,7 +32,8 @@ export const Nav = ({ variant = "app" }: Props) => {
               How it works
             </button>
             <Link
-              to="/login"
+              to="/signup"
+              title="Sign In"
               className="h-7 w-7 rounded-full bg-panel-elevated border border-border-subtle flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
             >
               <User className="h-3.5 w-3.5" />
