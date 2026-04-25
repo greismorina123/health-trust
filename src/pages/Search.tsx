@@ -17,6 +17,7 @@ import {
   searchFacilities,
 } from "@/services/trustmapApi";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const trustBadgeClass = (score: number) => {
   const t = trustTier(score);
