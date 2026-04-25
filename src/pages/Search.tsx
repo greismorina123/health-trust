@@ -71,7 +71,7 @@ const Search = () => {
       // Auto-open the highest-ranked facility in the drawer
       const top = mapped[0];
       if (top) await openFacility(top);
-    } catch (err) {
+    } catch {
       setSearchError("Search failed. Showing fallback data.");
       setQueryResponse(null);
       const fallback = [...fallbackFacilities].sort((a, b) => b.trust_score - a.trust_score);
@@ -96,7 +96,7 @@ const Search = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, [selected]);
 
-  if (role !== "user") return <Navigate to={dashboardPathFor(role)} replace />;
+  
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -149,6 +149,8 @@ const Search = () => {
 
   const queryPlan = queryResponse?.query_plan;
   const ci = queryResponse?.confidence_interval;
+
+  if (role !== "user") return <Navigate to={dashboardPathFor(role)} replace />;
 
   // Map source: results when searched, otherwise initial pins
   const mapFacilities = submittedQuery && results.length ? results : pins;
