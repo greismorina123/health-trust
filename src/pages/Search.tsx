@@ -324,7 +324,7 @@ const Search = () => {
               <div className="flex items-center gap-2 mb-2 px-1">
                 <span className="text-xs uppercase tracking-wide text-muted-foreground">Results</span>
                 <span className="px-1.5 py-0.5 rounded-md bg-panel-elevated text-xs text-foreground">
-                  {isSearching ? "…" : results.length}
+                  {isSearching ? "…" : filteredResults.length}
                 </span>
                 {ci && (
                   <span className="ml-auto text-[11px] text-muted-foreground">
@@ -333,26 +333,32 @@ const Search = () => {
                 )}
               </div>
               <div className="space-y-2">
-                {isSearching && results.length === 0 && (
+                {isSearching && filteredResults.length === 0 && (
                   <div className="rounded-xl border border-border-subtle bg-panel p-6 text-center text-xs text-muted-foreground">
                     Searching…
                   </div>
                 )}
-                {!isSearching && results.length === 0 && (
+                {!isSearching && filteredResults.length === 0 && (
                   <div className="rounded-xl border border-border-subtle bg-panel p-6 text-center text-xs text-muted-foreground">
                     No facilities matched your query.
                   </div>
                 )}
-                {results.map((f) => {
+                {filteredResults.map((f) => {
                   const flag = f.red_flags[0];
                   const isSelected = selected?.id === f.id;
+                  const highlightRisky =
+                    submittedFilters.trust === "risky" && f.red_flags.length > 0;
                   return (
                     <button
                       key={f.id}
                       onClick={() => openFacility(f)}
                       className={cn(
                         "w-full text-left bg-panel border rounded-xl p-4 hover:bg-panel-elevated/60 transition-colors",
-                        isSelected ? "border-primary/60" : "border-border-subtle",
+                        isSelected
+                          ? "border-primary/60"
+                          : highlightRisky
+                            ? "border-trust-low/50"
+                            : "border-border-subtle",
                       )}
                     >
                       <div className="flex items-center justify-between gap-3">
