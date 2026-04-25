@@ -36,6 +36,7 @@ export default {
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
+          strong: "hsl(var(--muted-foreground-strong))",
         },
         accent: {
           DEFAULT: "hsl(var(--accent))",
@@ -49,10 +50,10 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        surface: {
-          DEFAULT: "hsl(var(--surface))",
-          elevated: "hsl(var(--surface-elevated))",
-          muted: "hsl(var(--surface-muted))",
+        panel: {
+          DEFAULT: "hsl(var(--panel))",
+          elevated: "hsl(var(--panel-elevated))",
+          accent: "hsl(var(--panel-accent))",
         },
         trust: {
           high: "hsl(var(--trust-high))",
@@ -76,7 +77,6 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-        xl: "calc(var(--radius) + 4px)",
       },
       keyframes: {
         "accordion-down": {
