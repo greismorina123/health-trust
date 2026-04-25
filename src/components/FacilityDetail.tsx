@@ -39,7 +39,7 @@ export const FacilityDetail = ({ facility, onClose, standalone }: Props) => {
   const dashOffset = circumference * (1 - facility.trust_score / 100);
 
   const [barsVisible, setBarsVisible] = useState(false);
-  const [claimsOpen, setClaimsOpen] = useState(true);
+  const [claimsOpen, setClaimsOpen] = useState(false);
   const [subScoresOpen, setSubScoresOpen] = useState(false);
 
   useEffect(() => {
