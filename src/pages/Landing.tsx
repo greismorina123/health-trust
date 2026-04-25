@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Building2, Search, Stethoscope, User } from "lucide-react";
+import { Search } from "lucide-react";
 import { Nav } from "@/components/Nav";
 
 const exampleChips = [
@@ -68,65 +68,12 @@ const Landing = () => {
           </div>
         </section>
 
-        {/* Role cards */}
-        <section className="mt-20 max-w-3xl mx-auto grid gap-4 grid-cols-1 md:grid-cols-3">
-          <RoleCard
-            icon={<User className="h-5 w-5 text-primary" />}
-            title="I'm a Patient"
-            desc="Find trusted facilities near you. No account needed."
-            ctaLabel="Search Now"
-            ctaTo="/search"
-            ctaClass="text-primary"
-          />
-          <RoleCard
-            icon={<Stethoscope className="h-5 w-5 text-trust-high" />}
-            title="I'm a Doctor"
-            desc="Verify facility data, flag errors, and help improve trust scores."
-            ctaLabel="Create Account"
-            ctaTo="/signup?role=doctor"
-            ctaClass="text-trust-high"
-          />
-          <RoleCard
-            icon={<Building2 className="h-5 w-5 text-trust-mid" />}
-            title="Government / NGO"
-            desc="Map medical deserts, export district reports, plan health interventions."
-            ctaLabel="Create Account"
-            ctaTo="/signup?role=government"
-            ctaClass="text-trust-mid"
-          />
-        </section>
-
-        <footer className="mt-20 text-center text-xs text-muted-foreground/60">
+        <footer className="mt-24 text-center text-xs text-muted-foreground/60">
           MIT Hackathon 2025 · Powered by Databricks, Claude, Tavily
         </footer>
       </main>
     </div>
   );
 };
-
-interface RoleCardProps {
-  icon: React.ReactNode;
-  title: string;
-  desc: string;
-  ctaLabel: string;
-  ctaTo: string;
-  ctaClass: string;
-}
-
-const RoleCard = ({ icon, title, desc, ctaLabel, ctaTo, ctaClass }: RoleCardProps) => (
-  <div className="bg-panel border border-border-subtle rounded-xl p-6 hover:border-border transition-colors flex flex-col">
-    <div className="h-9 w-9 rounded-lg bg-panel-elevated flex items-center justify-center mb-3">
-      {icon}
-    </div>
-    <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-    <p className="text-xs text-muted-foreground mt-1 flex-1">{desc}</p>
-    <Link
-      to={ctaTo}
-      className={`mt-4 text-xs font-medium inline-flex items-center gap-1 ${ctaClass} hover:opacity-80 transition-opacity`}
-    >
-      {ctaLabel} <ArrowRight className="h-3 w-3" />
-    </Link>
-  </div>
-);
 
 export default Landing;
