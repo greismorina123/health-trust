@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ChevronDown, Search as SearchIcon, AlertTriangle, MapPin, X, ArrowLeft } from "lucide-react";
+import { Search as SearchIcon, AlertTriangle, MapPin, X, ArrowLeft } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { SearchMap } from "@/components/SearchMap";
 import { FacilityDetail } from "@/components/FacilityDetail";
 import {
   type Facility,
-  chainOfThoughtSteps,
   facilities,
   trustTier,
 } from "@/data/facilities";
@@ -34,31 +33,12 @@ const Search = () => {
   const [query, setQuery] = useState(initialQ);
   const [submittedQuery, setSubmittedQuery] = useState<string | null>(initialQ || null);
 
-  const [activeStep, setActiveStep] = useState<number>(-1);
-  const [stepsDone, setStepsDone] = useState(false);
-  const [expandedStep, setExpandedStep] = useState<number | null>(null);
-
   const [selected, setSelected] = useState<Facility | null>(null);
   const [showMap, setShowMap] = useState(true);
 
   const results = useMemo(() => {
     if (!submittedQuery) return [];
     return [...facilities].sort((a, b) => b.trust_score - a.trust_score);
-  }, [submittedQuery]);
-
-  useEffect(() => {
-    if (!submittedQuery) return;
-    setStepsDone(false);
-    setActiveStep(0);
-    setExpandedStep(null);
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    chainOfThoughtSteps.forEach((_, i) => {
-      timers.push(setTimeout(() => setActiveStep(i + 1), (i + 1) * 350));
-    });
-    timers.push(
-      setTimeout(() => setStepsDone(true), chainOfThoughtSteps.length * 350 + 200),
-    );
-    return () => timers.forEach(clearTimeout);
   }, [submittedQuery]);
 
   const submit = (e: FormEvent) => {
@@ -194,57 +174,6 @@ const Search = () => {
                 </div>
               </section>
 
-              {/* Reasoning steps — moved to the end */}
-              <section className="bg-panel border border-border-subtle rounded-xl p-4">
-                <h2 className="text-xs uppercase tracking-wide text-muted-foreground mb-3">
-                  Agent Reasoning
-                </h2>
-                <div className="space-y-1.5">
-                  {chainOfThoughtSteps.map((step, i) => {
-                    const done = i < activeStep || stepsDone;
-                    const active = i === activeStep && !stepsDone;
-                    const pending = !done && !active;
-                    const isExpanded = expandedStep === i;
-                    return (
-                      <div
-                        key={step.title}
-                        className="bg-background border border-border-subtle rounded-lg fade-up"
-                        style={{ animationDelay: `${i * 80}ms` }}
-                      >
-                        <button
-                          onClick={() => setExpandedStep(isExpanded ? null : i)}
-                          className="w-full px-3 py-2 flex items-center gap-2 hover:bg-panel-elevated/50 transition-colors rounded-lg"
-                        >
-                          <span
-                            className={cn(
-                              "h-5 w-5 rounded-full flex items-center justify-center text-xs font-mono shrink-0",
-                              done && "bg-trust-high/20 text-trust-high",
-                              active && "bg-primary/20 text-primary animate-pulse",
-                              pending && "bg-panel-elevated text-muted-foreground",
-                            )}
-                          >
-                            {done ? "✓" : i + 1}
-                          </span>
-                          <span className="text-xs text-foreground font-medium flex-1 text-left">
-                            {step.title}
-                          </span>
-                          <ChevronDown
-                            className={cn(
-                              "h-3 w-3 text-muted-foreground transition-transform",
-                              isExpanded && "rotate-180",
-                            )}
-                          />
-                        </button>
-                        {isExpanded && (
-                          <p className="px-3 pb-2 text-xs text-muted-foreground/80 leading-relaxed">
-                            {step.detail}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
             </div>
 
             {/* Right rail: helper */}
