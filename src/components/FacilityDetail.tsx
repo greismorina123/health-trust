@@ -127,28 +127,39 @@ export const FacilityDetail = ({ facility, onClose, standalone }: Props) => {
       </section>
 
       {/* Sub-Scores */}
-      <section className="p-5 border-b border-border-subtle space-y-3">
-        {subScoreLabels.map(([key, label], i) => {
-          const value = facility.sub_scores[key];
-          const pct = (value / 25) * 100;
-          return (
-            <div key={key}>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-sm text-muted-foreground">{label}</span>
-                <span className="text-sm text-foreground font-medium">{value}/25</span>
-              </div>
-              <div className="h-1.5 w-full rounded-full bg-panel-elevated overflow-hidden">
-                <div
-                  className={cn("h-full rounded-full", subScoreColorClass(value))}
-                  style={{
-                    width: barsVisible ? `${pct}%` : "0%",
-                    transition: `width 600ms cubic-bezier(0.22, 1, 0.36, 1) ${i * 150}ms`,
-                  }}
-                />
-              </div>
-            </div>
-          );
-        })}
+      <section className="p-5 border-b border-border-subtle">
+        <button
+          onClick={() => setSubScoresOpen((o) => !o)}
+          className="w-full flex items-center justify-between text-sm font-medium text-foreground"
+        >
+          <span>Score Breakdown</span>
+          <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", !subScoresOpen && "-rotate-90")} />
+        </button>
+        {subScoresOpen && (
+          <div className="mt-3 space-y-3">
+            {subScoreLabels.map(([key, label], i) => {
+              const value = facility.sub_scores[key];
+              const pct = (value / 25) * 100;
+              return (
+                <div key={key}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm text-muted-foreground">{label}</span>
+                    <span className="text-sm text-foreground font-medium">{value}/25</span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-panel-elevated overflow-hidden">
+                    <div
+                      className={cn("h-full rounded-full", subScoreColorClass(value))}
+                      style={{
+                        width: barsVisible && subScoresOpen ? `${pct}%` : "0%",
+                        transition: `width 600ms cubic-bezier(0.22, 1, 0.36, 1) ${i * 100}ms`,
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* Capability Claims */}
