@@ -31,6 +31,38 @@ const claimBadge: Record<Claim["status"], { label: string; cls: string }> = {
   unknown: { label: "Unknown", cls: "bg-panel-elevated text-muted-foreground" },
 };
 
+/**
+ * Translate raw contradiction/red-flag text into a short, plain-English
+ * "what this means for you" bullet. Returns up to 2 unique impact statements.
+ */
+const userImpactBullets = (claims: string[], flags: string[]): string[] => {
+  const all = [...claims, ...flags].join(" • ").toLowerCase();
+  const out: string[] = [];
+  const add = (s: string) => {
+    if (out.length < 2 && !out.includes(s)) out.push(s);
+  };
+
+  if (/(anesthes|anaesth)/.test(all) && /(mon|wed|fri|part[- ]?time|visit|only|night)/.test(all))
+    add("Anesthesia may not be available 24/7 — call ahead before any surgery or emergency.");
+  if (/(icu|ventilator|oxygen)/.test(all) && /(no |without|missing|unavailable|not|lack)/.test(all))
+    add("Listed ICU capability may lack ventilator or oxygen support — confirm before transfer.");
+  if (/(c[- ]?section|cesarean|maternity|obstet)/.test(all))
+    add("Emergency C-section or maternity coverage is not guaranteed — verify on-call staff.");
+  if (/(multi[- ]?special|specialt)/.test(all) && /(only|2 doctor|few|limited)/.test(all))
+    add("Listed specialties exceed actual staffing — many services may not be available on-site.");
+  if (/(family medicine|primary care|surgery|surgical)/.test(all) && /(only|no |dental|missing|without)/.test(all))
+    add("Some advertised services are not actually offered here — confirm before visiting.");
+  if (/(dialysis)/.test(all) && /(no |without|missing|unavailable|not)/.test(all))
+    add("Dialysis service may be unavailable or limited — call before traveling.");
+  if (/(staff|doctor|nurse)/.test(all) && /(short|few|only|limited|no )/.test(all))
+    add("Staffing levels are lower than claimed — expect longer waits or limited care.");
+
+  if (out.length === 0) {
+    add("Some listed capabilities don't match on-the-ground evidence — verify with the facility before relying on them.");
+  }
+  return out;
+};
+
 export const FacilityDetail = ({ facility, onClose, standalone }: Props) => {
   const score = useCountUp(facility.trust_score, 800, facility.id);
   const ringColor = trustHsl(facility.trust_score);
@@ -196,25 +228,28 @@ export const FacilityDetail = ({ facility, onClose, standalone }: Props) => {
         )}
       </section>
 
-      {/* Contradictions */}
-      {(contradicted.length > 0 || facility.red_flags.length > 0) && (
-        <section className="p-5 border-b border-border-subtle">
-          <div className="rounded-lg border border-trust-low/20 bg-trust-low/5 p-4">
-            <div className="flex items-center gap-1.5 mb-2">
-              <AlertTriangle className="h-3.5 w-3.5 text-trust-low" />
-              <p className="text-sm font-medium text-trust-low">Contradictions</p>
+      {/* Contradictions — translated into user impact */}
+      {(contradicted.length > 0 || facility.red_flags.length > 0) && (() => {
+        const bullets = userImpactBullets(
+          contradicted.map((c) => c.claim),
+          facility.red_flags,
+        );
+        return (
+          <section className="p-5 border-b border-border-subtle">
+            <div className="rounded-lg border border-trust-low/20 bg-trust-low/5 p-4">
+              <div className="flex items-center gap-1.5 mb-1">
+                <AlertTriangle className="h-3.5 w-3.5 text-trust-low" />
+                <p className="text-sm font-medium text-trust-low">What this means for you</p>
+              </div>
+              <ul className="mt-2 space-y-1.5 list-disc pl-4 marker:text-trust-low/60">
+                {bullets.map((b, i) => (
+                  <li key={`u-${i}`} className="text-sm text-foreground/90 leading-snug">{b}</li>
+                ))}
+              </ul>
             </div>
-            <ul className="space-y-1 list-disc pl-4 marker:text-trust-low/60">
-              {contradicted.map((c, i) => (
-                <li key={`c-${i}`} className="text-sm text-foreground/90">{c.claim}</li>
-              ))}
-              {facility.red_flags.map((f, i) => (
-                <li key={`f-${i}`} className="text-sm text-foreground/90">{f}</li>
-              ))}
-            </ul>
-          </div>
-        </section>
-      )}
+          </section>
+        );
+      })()}
 
       {/* Reasoning Summary */}
       <section className="p-5">
