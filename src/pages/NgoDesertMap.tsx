@@ -171,33 +171,31 @@ const NgoDesertMap = () => {
           </div>
         </section>
 
-        {/* Map + Risk table */}
-        <div className={cn("grid gap-4", detailCollapsed ? "lg:grid-cols-[1fr_44px]" : "lg:grid-cols-[1fr_420px]")}>
-          <div className="rounded-xl border border-border-subtle bg-panel overflow-hidden h-[460px] lg:h-[600px]">
+        {/* Map + Selected region */}
+        <div className={cn("grid gap-4", detailCollapsed ? "grid-cols-1" : "lg:grid-cols-[1fr_420px]")}>
+          <div className="relative rounded-xl border border-border-subtle bg-panel overflow-hidden h-[460px] lg:h-[600px]">
             <DesertMap regions={filtered} selectedId={selected?.id ?? null} onSelect={(r) => setSelectedId(r.id)} />
-          </div>
-          {detailCollapsed ? (
-            <button
-              type="button"
-              onClick={() => setDetailCollapsed(false)}
-              aria-label="Expand selected region panel"
-              className="rounded-xl border border-border-subtle bg-panel hover:bg-panel-elevated/60 transition-colors flex flex-col items-center justify-start gap-2 py-3 w-[44px]"
-            >
-              <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground" />
-              <Building2 className="h-4 w-4 text-primary" />
-              <span
-                className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mt-1"
-                style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+            {detailCollapsed && (
+              <button
+                type="button"
+                onClick={() => setDetailCollapsed(false)}
+                aria-label="Expand selected region panel"
+                className="absolute top-3 right-3 z-[400] rounded-lg border border-border-subtle bg-background/90 backdrop-blur hover:bg-panel-elevated transition-colors flex items-center gap-1.5 px-2.5 h-9 shadow-md"
               >
-                Selected region
-              </span>
-            </button>
-          ) : selected ? (
-            <RegionDetail region={selected} onCollapse={() => setDetailCollapsed(true)} />
-          ) : (
-            <div className="rounded-xl border border-border-subtle bg-panel p-6 text-center text-sm text-muted-foreground">
-              No regions match your filters.
-            </div>
+                <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground" />
+                <Building2 className="h-4 w-4 text-primary" />
+                <span className="text-xs font-medium text-foreground">Selected region</span>
+              </button>
+            )}
+          </div>
+          {!detailCollapsed && (
+            selected ? (
+              <RegionDetail region={selected} onCollapse={() => setDetailCollapsed(true)} />
+            ) : (
+              <div className="rounded-xl border border-border-subtle bg-panel p-6 text-center text-sm text-muted-foreground">
+                No regions match your filters.
+              </div>
+            )
           )}
         </div>
 
