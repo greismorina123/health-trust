@@ -170,7 +170,12 @@ export const SearchMap = ({
       }}
     >
       <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        key={theme}
+        url={
+          theme === "light"
+            ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+            : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        }
         attribution='&copy; OpenStreetMap &copy; CARTO'
         subdomains={["a", "b", "c", "d"]}
       />
