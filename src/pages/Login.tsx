@@ -1,23 +1,28 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Nav } from "@/components/Nav";
+import { dashboardPathFor, useRole, type Role } from "@/context/RoleContext";
 
 const Login = () => {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const role = params.get("role");
+  const { setRole, role: currentRole } = useRole();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    navigate("/search");
+    const next: Role =
+      role === "doctor" ? "doctor" : role === "ngo" || role === "government" ? "ngo" : currentRole;
+    setRole(next);
+    navigate(dashboardPathFor(next));
   };
 
   const roleLabel =
     role === "doctor"
       ? { label: "Doctor Dashboard", color: "text-trust-high" }
-      : role === "ngo"
+      : role === "ngo" || role === "government"
         ? { label: "NGO Dashboard", color: "text-trust-mid" }
         : null;
 

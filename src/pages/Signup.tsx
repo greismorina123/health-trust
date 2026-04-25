@@ -2,8 +2,15 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Nav } from "@/components/Nav";
 import { cn } from "@/lib/utils";
+import { dashboardPathFor, useRole, type Role as AppRole } from "@/context/RoleContext";
 
 type Role = "patient" | "doctor" | "government";
+
+const roleToApp: Record<Role, AppRole> = {
+  patient: "user",
+  doctor: "doctor",
+  government: "ngo",
+};
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -12,6 +19,7 @@ const Signup = () => {
   const [role, setRole] = useState<Role>(
     ["patient", "doctor", "government"].includes(initialRole) ? initialRole : "patient",
   );
+  const { setRole: setAppRole } = useRole();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -27,7 +35,9 @@ const Signup = () => {
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    navigate("/search");
+    const appRole = roleToApp[role];
+    setAppRole(appRole);
+    navigate(dashboardPathFor(appRole));
   };
 
   const roles: Array<{ key: Role; label: string }> = [
