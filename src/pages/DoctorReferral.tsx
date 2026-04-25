@@ -205,6 +205,12 @@ const DoctorReferral = () => {
           ))}
         </div>
 
+        {searchError && (
+          <div className="mt-3 rounded-lg border border-trust-low/30 bg-trust-low/5 px-3.5 py-2 text-xs text-trust-low">
+            {searchError}
+          </div>
+        )}
+
         {/* Empty state */}
         {!submitted && (
           <div className="mt-12 grid lg:grid-cols-[1fr_360px] gap-4">
@@ -217,7 +223,7 @@ const DoctorReferral = () => {
                 Each result shows verified capabilities, contradictions, and recommended follow-up.
               </p>
             </div>
-            <ReferralRiskMap region={region} setRegion={setRegion} />
+            <ReferralRiskMap regions={referralRegions} region={region} setRegion={setRegion} />
           </div>
         )}
 
@@ -227,19 +233,30 @@ const DoctorReferral = () => {
             <section className="space-y-2">
               <div className="flex items-center gap-2 mb-1 px-1">
                 <span className="text-xs uppercase tracking-wide text-muted-foreground">Ranked results</span>
-                <span className="px-1.5 py-0.5 rounded-md bg-panel-elevated text-xs text-foreground">{results.length}</span>
+                <span className="px-1.5 py-0.5 rounded-md bg-panel-elevated text-xs text-foreground">
+                  {isSearching ? "…" : results.length}
+                </span>
+                {isSearching && (
+                  <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                )}
               </div>
+              {!isSearching && results.length === 0 && (
+                <div className="rounded-xl border border-border-subtle bg-panel p-6 text-center text-xs text-muted-foreground">
+                  No facilities matched your query.
+                </div>
+              )}
               {results.map((f) => {
                 const v = verifications[f.id];
-                const caution = v?.referralCaution ?? "Verify before referral";
+                const caution = v?.referralCaution ?? cautionFromScore(f.trust_score);
                 const cs = cautionStyles[caution];
                 const verified = v?.capabilities.filter((c) => c.status === "Verified").length ?? 0;
                 const missing = v?.capabilities.filter((c) => c.status === "Contradicted" || c.status === "Unknown").length ?? 0;
                 const contradictions = v?.contradictions.length ?? 0;
+                const apiHint = !v ? f.red_flags[0] : null;
                 return (
                   <button
                     key={f.id}
-                    onClick={() => setSelected(f)}
+                    onClick={() => openFacility(f)}
                     className={cn(
                       "w-full text-left bg-panel border rounded-xl p-4 hover:bg-panel-elevated/60 transition-colors",
                       selected?.id === f.id ? "border-primary/60" : "border-border-subtle",
@@ -262,13 +279,20 @@ const DoctorReferral = () => {
                         <span className={cn("h-1.5 w-1.5 rounded-full", cs.dot)} />
                         {cs.label}
                       </span>
-                      <span className="text-[11px] text-muted-foreground">
-                        {verified} verified · {missing} missing · {contradictions} contradictions
-                      </span>
+                      {v && (
+                        <span className="text-[11px] text-muted-foreground">
+                          {verified} verified · {missing} missing · {contradictions} contradictions
+                        </span>
+                      )}
                     </div>
                     {v?.recommendedFollowUp[0] && (
                       <p className="mt-1.5 text-xs text-muted-foreground/80 line-clamp-1">
                         Follow-up: {v.recommendedFollowUp[0]}
+                      </p>
+                    )}
+                    {apiHint && (
+                      <p className="mt-1.5 text-xs text-muted-foreground/80 line-clamp-1">
+                        {apiHint}
                       </p>
                     )}
                   </button>
@@ -276,7 +300,7 @@ const DoctorReferral = () => {
               })}
             </section>
 
-            <ReferralRiskMap region={region} setRegion={setRegion} />
+            <ReferralRiskMap regions={referralRegions} region={region} setRegion={setRegion} />
           </div>
         )}
 
