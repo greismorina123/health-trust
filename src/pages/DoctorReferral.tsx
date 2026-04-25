@@ -662,16 +662,28 @@ const ReferralRiskMap = ({
   regions,
   region,
   setRegion,
+  onCollapse,
 }: {
   regions: DesertRegion[];
   region: DesertRegion;
   setRegion: (r: DesertRegion) => void;
+  onCollapse?: () => void;
 }) => {
   return (
     <aside className="rounded-xl border border-border-subtle bg-panel overflow-hidden">
       <div className="px-4 py-3 border-b border-border-subtle flex items-center gap-2">
         <ShieldAlert className="h-3.5 w-3.5 text-trust-low" />
         <span className="text-xs font-medium text-foreground">Referral Risk Map</span>
+        {onCollapse && (
+          <button
+            type="button"
+            onClick={onCollapse}
+            aria-label="Collapse referral risk map"
+            className="ml-auto h-6 w-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-panel-elevated transition-colors"
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
 
       <div className="p-3 border-b border-border-subtle space-y-1">
