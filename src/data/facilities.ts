@@ -44,6 +44,7 @@ export const facilities: Facility[] = [
     state: "Maharashtra",
     facility_type: "District Hospital",
     trust_score: 82,
+    confidence_interval: [76, 88],
     sub_scores: { consistency: 20, plausibility: 22, activity: 19, completeness: 21 },
     summary:
       "Verified obstetric surgery capability including C-section. Has 1 part-time anesthesiologist — may limit emergency night availability.",
@@ -65,6 +66,7 @@ export const facilities: Facility[] = [
     state: "Maharashtra",
     facility_type: "Private Clinic",
     trust_score: 58,
+    confidence_interval: [49, 67],
     sub_scores: { consistency: 12, plausibility: 14, activity: 17, completeness: 15 },
     summary:
       "Claims multi-specialty but only 2 doctors listed. Equipment list supports basic surgery but not complex obstetric procedures.",
@@ -85,6 +87,7 @@ export const facilities: Facility[] = [
     state: "Maharashtra",
     facility_type: "Dental Clinic",
     trust_score: 28,
+    confidence_interval: [18, 38],
     sub_scores: { consistency: 3, plausibility: 5, activity: 10, completeness: 10 },
     summary:
       "Dental clinic claiming family medicine and minor surgery. Major consistency failures — likely miscategorized or inflated listing.",
@@ -105,6 +108,7 @@ export const facilities: Facility[] = [
     state: "Maharashtra",
     facility_type: "Teaching Hospital",
     trust_score: 91,
+    confidence_interval: [87, 95],
     sub_scores: { consistency: 23, plausibility: 22, activity: 22, completeness: 24 },
     summary:
       "Major teaching hospital with comprehensive surgical capability. Well-staffed and well-equipped. High data completeness and consistency.",
@@ -126,6 +130,7 @@ export const facilities: Facility[] = [
     state: "Maharashtra",
     facility_type: "PHC",
     trust_score: 55,
+    confidence_interval: [44, 66],
     sub_scores: { consistency: 15, plausibility: 14, activity: 12, completeness: 14 },
     summary:
       "Basic PHC with limited services. Claims 24/7 but single-doctor facility. Adequate for primary care, not emergencies.",
@@ -146,6 +151,7 @@ export const facilities: Facility[] = [
     state: "Maharashtra",
     facility_type: "Private Hospital",
     trust_score: 88,
+    confidence_interval: [83, 93],
     sub_scores: { consistency: 22, plausibility: 21, activity: 22, completeness: 23 },
     summary:
       "Well-known private chain hospital. Comprehensive services with strong equipment and staffing. NABH accredited.",
