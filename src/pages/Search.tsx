@@ -161,72 +161,7 @@ const Search = () => {
           </div>
         </form>
 
-        {/* Filters */}
-        <div className="mt-2 flex flex-wrap gap-2">
-          <Select
-            value={filters.location}
-            onValueChange={(v) => updateFilter("location", v as LocationKey)}
-          >
-            <SelectTrigger className="h-8 w-auto min-w-[130px] bg-panel border-border-subtle text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {LOCATION_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value} className="text-xs">
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
 
-          <Select
-            value={filters.care}
-            onValueChange={(v) => updateFilter("care", v as CareKey)}
-          >
-            <SelectTrigger className="h-8 w-auto min-w-[130px] bg-panel border-border-subtle text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {CARE_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value} className="text-xs">
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={filters.trust}
-            onValueChange={(v) => updateFilter("trust", v as TrustKey)}
-          >
-            <SelectTrigger className="h-8 w-auto min-w-[130px] bg-panel border-border-subtle text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {TRUST_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value} className="text-xs">
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Active filter chips */}
-        {activeChips.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {activeChips.map((c) => (
-              <button
-                key={c.key}
-                onClick={() => clearFilter(c.key)}
-                className="inline-flex items-center gap-1 h-6 px-2 rounded-full bg-panel border border-border-subtle text-[11px] text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors"
-              >
-                {c.label}
-                <X className="h-2.5 w-2.5" />
-              </button>
-            ))}
-          </div>
-        )}
 
         {searchError && (
           <div className="mt-3 rounded-lg border border-trust-low/30 bg-trust-low/5 px-3.5 py-2 text-xs text-trust-low">
