@@ -71,6 +71,7 @@ const DoctorReferral = () => {
   );
   const [subScoresOpen, setSubScoresOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [riskMapCollapsed, setRiskMapCollapsed] = useState(false);
 
   // Load district risk regions from API
   useEffect(() => {
