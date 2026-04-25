@@ -65,7 +65,7 @@ const Landing = () => {
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Ask anything…"
+                placeholder="What care do you need?"
                 className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
               />
               <button
@@ -75,6 +75,56 @@ const Landing = () => {
               >
                 <Search className="h-4 w-4" />
               </button>
+            </div>
+
+            <div className="mt-2 flex flex-wrap gap-2 justify-center">
+              <Select
+                value={filters.location}
+                onValueChange={(v) => setFilters((f) => ({ ...f, location: v as LocationKey }))}
+              >
+                <SelectTrigger className="h-9 w-auto min-w-[140px] bg-panel border-border-subtle text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LOCATION_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value} className="text-xs">
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={filters.care}
+                onValueChange={(v) => setFilters((f) => ({ ...f, care: v as CareKey }))}
+              >
+                <SelectTrigger className="h-9 w-auto min-w-[140px] bg-panel border-border-subtle text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CARE_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value} className="text-xs">
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={filters.trust}
+                onValueChange={(v) => setFilters((f) => ({ ...f, trust: v as TrustKey }))}
+              >
+                <SelectTrigger className="h-9 w-auto min-w-[140px] bg-panel border-border-subtle text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TRUST_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value} className="text-xs">
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </form>
 
