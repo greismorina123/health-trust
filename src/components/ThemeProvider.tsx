@@ -11,15 +11,16 @@ const Ctx = createContext<ThemeCtx | undefined>(undefined);
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window === "undefined") return "dark";
-    const saved = localStorage.getItem("caremap-theme") as Theme | null;
+    const saved = localStorage.getItem("trustmap-theme") as Theme | null;
     if (saved) return saved;
     return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
   });
 
   useEffect(() => {
     const root = document.documentElement;
+    root.classList.toggle("light", theme === "light");
     root.classList.toggle("dark", theme === "dark");
-    localStorage.setItem("caremap-theme", theme);
+    localStorage.setItem("trustmap-theme", theme);
   }, [theme]);
 
   return (
