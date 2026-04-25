@@ -4,6 +4,7 @@ import { Search as SearchIcon, AlertTriangle, MapPin, X, ArrowLeft, ShieldAlert,
 import { Nav } from "@/components/Nav";
 import { SearchMap } from "@/components/SearchMap";
 import { FacilityDetail } from "@/components/FacilityDetail";
+import { Disclaimer } from "@/components/Disclaimer";
 import { type Facility, facilities as fallbackFacilities, trustTier } from "@/data/facilities";
 import { useRole, dashboardPathFor } from "@/context/RoleContext";
 import { SAFETY_NOTE } from "@/data/roleData";
@@ -397,6 +398,7 @@ const Search = () => {
         )}
 
         <span className="hidden">{navigate.length}</span>
+        <Disclaimer />
       </main>
     </div>
   );

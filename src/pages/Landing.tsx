@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Nav } from "@/components/Nav";
+import { Disclaimer } from "@/components/Disclaimer";
 
 const exampleChips = [
   "C-section in rural Maharashtra",
@@ -165,6 +166,7 @@ const Landing = () => {
         <footer className="mt-24 text-center text-xs text-muted-foreground/60">
           MIT Hackathon 2025 · Powered by Databricks, Claude, Tavily
         </footer>
+        <Disclaimer />
       </main>
     </div>
   );
