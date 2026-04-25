@@ -31,7 +31,7 @@ const Login = () => {
       <Nav variant="landing" />
       <main className="px-6 pt-24">
         <div className="max-w-sm mx-auto fade-up">
-          <h1 className="text-xl font-semibold text-foreground">Sign in to TrustMap</h1>
+          <h1 className="text-xl font-semibold text-foreground">Sign in to CareMap</h1>
           {roleLabel && (
             <p className={`mt-1 text-sm font-medium ${roleLabel.color}`}>{roleLabel.label}</p>
           )}

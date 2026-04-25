@@ -125,7 +125,7 @@ export const Nav = ({ variant = "app" }: Props) => {
       <div className="h-full px-4 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <MapPin className="h-4 w-4 text-primary" />
-          <span className="text-sm font-semibold text-foreground">TrustMap India</span>
+          <span className="text-sm font-semibold text-foreground">CareMap India</span>
         </Link>
 
         {variant === "landing" ? (
