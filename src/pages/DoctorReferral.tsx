@@ -506,8 +506,8 @@ const FacilityVerificationPanel = ({ facility, detail, isLoadingDetail, subScore
         </ol>
       </section>
 
-      {/* Contradictions */}
-      {v && v.contradictions.length > 0 && (
+      {/* Contradictions — prefer API data */}
+      {(apiContradictions.length > 0 || (v && v.contradictions.length > 0)) && (
         <section className="p-5 border-b border-border-subtle">
           <div className="rounded-lg border border-trust-low/20 bg-trust-low/5 p-4">
             <div className="flex items-center gap-1.5 mb-2">
@@ -515,17 +515,37 @@ const FacilityVerificationPanel = ({ facility, detail, isLoadingDetail, subScore
               <p className="text-sm font-medium text-trust-low">Contradictions</p>
             </div>
             <ul className="space-y-2.5">
-              {v.contradictions.map((c) => (
-                <li key={c.title}>
-                  <p className="text-sm text-foreground/90">{c.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{c.description}</p>
-                  <p className="text-[11px] text-muted-foreground/70 mt-0.5">
-                    Source fields: {c.sourceFields.join(", ")}
-                  </p>
-                </li>
-              ))}
+              {apiContradictions.length > 0
+                ? apiContradictions.map((c, i) => (
+                    <li key={`${c.field_name}-${i}`}>
+                      <p className="text-sm text-foreground/90">{c.claim}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{c.why_contradictory}</p>
+                      <p className="text-[11px] text-muted-foreground/70 mt-0.5">
+                        Field: {c.field_name} · Severity {c.severity}/5
+                      </p>
+                    </li>
+                  ))
+                : v!.contradictions.map((c) => (
+                    <li key={c.title}>
+                      <p className="text-sm text-foreground/90">{c.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{c.description}</p>
+                      <p className="text-[11px] text-muted-foreground/70 mt-0.5">
+                        Source fields: {c.sourceFields.join(", ")}
+                      </p>
+                    </li>
+                  ))}
             </ul>
           </div>
+        </section>
+      )}
+
+      {/* Reasoning summary from API */}
+      {detail?.reasoning_summary && (
+        <section className="p-5 border-b border-border-subtle">
+          <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
+            Summary
+          </h3>
+          <p className="text-sm text-muted-foreground italic">{detail.reasoning_summary}</p>
         </section>
       )}
 
@@ -573,9 +593,11 @@ const FacilityVerificationPanel = ({ facility, detail, isLoadingDetail, subScore
 // =============================================================================
 
 const ReferralRiskMap = ({
+  regions,
   region,
   setRegion,
 }: {
+  regions: DesertRegion[];
   region: DesertRegion;
   setRegion: (r: DesertRegion) => void;
 }) => {
@@ -587,7 +609,7 @@ const ReferralRiskMap = ({
       </div>
 
       <div className="p-3 border-b border-border-subtle space-y-1">
-        {referralRiskRegions.map((r) => {
+        {regions.map((r) => {
           const active = r.id === region.id;
           return (
             <button
