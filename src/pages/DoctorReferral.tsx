@@ -253,7 +253,7 @@ const DoctorReferral = () => {
 
         {/* Empty state */}
         {!submitted && (
-          <div className="mt-12 grid lg:grid-cols-[1fr_360px] gap-4">
+          <div className={cn("mt-12 grid gap-4", riskMapCollapsed ? "lg:grid-cols-[1fr_44px]" : "lg:grid-cols-[1fr_360px]")}>
             <div className="rounded-xl border border-border-subtle bg-panel p-8 flex flex-col items-center text-center">
               <SearchIcon className="h-6 w-6 text-muted-foreground/60" />
               <p className="mt-3 text-sm text-muted-foreground">
@@ -263,7 +263,16 @@ const DoctorReferral = () => {
                 Each result shows verified capabilities, contradictions, and recommended follow-up.
               </p>
             </div>
-            <ReferralRiskMap regions={referralRegions} region={region} setRegion={setRegion} />
+            {riskMapCollapsed ? (
+              <CollapsedRiskRail onExpand={() => setRiskMapCollapsed(false)} />
+            ) : (
+              <ReferralRiskMap
+                regions={referralRegions}
+                region={region}
+                setRegion={setRegion}
+                onCollapse={() => setRiskMapCollapsed(true)}
+              />
+            )}
           </div>
         )}
 
