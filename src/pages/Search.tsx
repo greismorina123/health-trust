@@ -33,11 +33,8 @@ const Search = () => {
   const navigate = useNavigate();
 
   const initialQ = params.get("q") ?? "";
-  const initialFilters = filtersFromParams(params);
   const [query, setQuery] = useState(initialQ);
-  const [filters, setFilters] = useState<FilterState>(initialFilters);
   const [submittedQuery, setSubmittedQuery] = useState<string | null>(initialQ || null);
-  const [submittedFilters, setSubmittedFilters] = useState<FilterState>(initialFilters);
   const [selected, setSelected] = useState<Facility | null>(null);
   const [showMap, setShowMap] = useState(true);
 
@@ -65,20 +62,19 @@ const Search = () => {
   }, []);
 
   // Run a query against the API
-  const runSearch = async (text: string, f: FilterState) => {
-    const combined = buildCombinedQuery(text, f);
+  const runSearch = async (q: string) => {
     setIsSearching(true);
     setSearchError(null);
     try {
-      const resp = await searchFacilities(combined || text);
+      const resp = await searchFacilities(q);
       setQueryResponse(resp);
       // Filter out non-facility entries (e.g. district/desert results) which lack coords/id
       const mapped = resp.results
         .filter((r: any) => r && r.facility_id && Number.isFinite(r.latitude) && Number.isFinite(r.longitude))
         .map(facilityFromSearchResult);
       setResults(mapped);
-      // Auto-open the highest-ranked facility (after trust filtering) in the drawer
-      const top = applyTrustFilter(mapped, f.trust)[0];
+      // Auto-open the highest-ranked facility in the drawer
+      const top = mapped[0];
       if (top) await openFacility(top);
     } catch {
       setSearchError("Search failed. Showing fallback data.");
@@ -90,11 +86,11 @@ const Search = () => {
     }
   };
 
-  // Re-run query when ?q= or filters change (e.g. on first load)
+  // Re-run query when ?q= changes (e.g. on first load)
   useEffect(() => {
-    if (submittedQuery) void runSearch(submittedQuery, submittedFilters);
+    if (submittedQuery) void runSearch(submittedQuery);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [submittedQuery, submittedFilters]);
+  }, [submittedQuery]);
 
   useEffect(() => {
     if (!selected) return;
@@ -105,15 +101,6 @@ const Search = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, [selected]);
 
-  const commitSearch = (text: string, f: FilterState) => {
-    const sp = new URLSearchParams();
-    if (text) sp.set("q", text);
-    for (const [k, v] of Object.entries(filtersToParams(f))) sp.set(k, v);
-    setParams(sp);
-    setSubmittedQuery(text);
-    setSubmittedFilters(f);
-  };
-
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const q = query.trim();
@@ -121,22 +108,8 @@ const Search = () => {
       toast("Please enter a search query");
       return;
     }
-    commitSearch(q, filters);
-  };
-
-  const runChip = (text: string) => {
-    setQuery(text);
-    commitSearch(text, filters);
-  };
-
-  const updateFilter = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
-    const next = { ...filters, [key]: value };
-    setFilters(next);
-    if (submittedQuery) commitSearch(submittedQuery, next);
-  };
-
-  const clearFilter = <K extends keyof FilterState>(key: K) => {
-    updateFilter(key, defaultFilters[key] as FilterState[K]);
+    setParams({ q });
+    setSubmittedQuery(q);
   };
 
   const openFacility = async (f: Facility) => {
@@ -156,31 +129,11 @@ const Search = () => {
 
   const ci = queryResponse?.confidence_interval;
 
-  // Apply trust-level filter on the frontend after API returns.
-  const filteredResults = useMemo(
-    () => applyTrustFilter(results, submittedFilters.trust),
-    [results, submittedFilters.trust],
-  );
-
   if (role !== "user") return <Navigate to={dashboardPathFor(role)} replace />;
 
   // Map source: results when searched, otherwise initial pins
-  const mapFacilities = submittedQuery && filteredResults.length ? filteredResults : pins;
-  const mapResultIds = submittedQuery ? filteredResults.map((r) => r.id) : [];
-
-  const activeChips: { key: keyof FilterState; label: string }[] = [];
-  if (submittedFilters.location !== "any") {
-    const o = LOCATION_OPTIONS.find((x) => x.value === submittedFilters.location);
-    if (o) activeChips.push({ key: "location", label: o.label });
-  }
-  if (submittedFilters.care !== "any") {
-    const o = CARE_OPTIONS.find((x) => x.value === submittedFilters.care);
-    if (o) activeChips.push({ key: "care", label: o.label });
-  }
-  if (submittedFilters.trust !== "any") {
-    const o = TRUST_OPTIONS.find((x) => x.value === submittedFilters.trust);
-    if (o) activeChips.push({ key: "trust", label: o.label });
-  }
+  const mapFacilities = submittedQuery && results.length ? results : pins;
+  const mapResultIds = submittedQuery ? results.map((r) => r.id) : [];
 
   return (
     <div className="min-h-screen bg-background">
