@@ -223,23 +223,30 @@ const Search = () => {
                       )}
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm text-foreground font-medium line-clamp-1">{f.name}</span>
-                        <span className={cn("text-xs font-bold rounded-md px-1.5 py-0.5 shrink-0", trustBadgeClass(f.trust_score))}>
+                        <div className="min-w-0 flex-1">
+                          <span className="block text-sm text-foreground font-medium line-clamp-1">{f.name}</span>
+                          <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
+                            <MapPin className="h-3 w-3 shrink-0" />
+                            <span className="line-clamp-1">{f.district}, {f.state}</span>
+                            <span className="text-muted-foreground/40">·</span>
+                            <span className="text-muted-foreground/70 shrink-0">{f.facility_type}</span>
+                          </div>
+                          {flag && (
+                            <p className="mt-1.5 flex items-center gap-1 text-xs text-trust-low/80 line-clamp-1">
+                              <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
+                              {flag}
+                            </p>
+                          )}
+                        </div>
+                        <span
+                          className={cn(
+                            "shrink-0 inline-flex items-center justify-center h-12 w-12 rounded-full border-2 text-base font-bold",
+                            trustBadgeClass(f.trust_score),
+                          )}
+                        >
                           {f.trust_score}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
-                        <MapPin className="h-3 w-3 shrink-0" />
-                        <span className="line-clamp-1">{f.district}, {f.state}</span>
-                        <span className="text-muted-foreground/40">·</span>
-                        <span className="text-muted-foreground/70 shrink-0">{f.facility_type}</span>
-                      </div>
-                      {flag && (
-                        <p className="mt-1.5 flex items-center gap-1 text-xs text-trust-low/80 line-clamp-1">
-                          <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
-                          {flag}
-                        </p>
-                      )}
                     </button>
                   );
                 })}
