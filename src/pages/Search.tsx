@@ -103,7 +103,10 @@ const Search = () => {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const q = query.trim();
-    if (!q) return;
+    if (!q) {
+      toast("Please enter a search query");
+      return;
+    }
     setParams({ q });
     setSubmittedQuery(q);
   };
