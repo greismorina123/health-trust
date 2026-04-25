@@ -219,11 +219,7 @@ const Search = () => {
                       onClick={() => openFacility(f)}
                       className={cn(
                         "w-full text-left bg-panel border rounded-xl p-4 hover:bg-panel-elevated/60 transition-colors",
-                        isSelected
-                          ? "border-primary/60"
-                          : highlightRisky
-                            ? "border-trust-low/50"
-                            : "border-border-subtle",
+                        isSelected ? "border-primary/60" : "border-border-subtle",
                       )}
                     >
                       <div className="flex items-center justify-between gap-3">
