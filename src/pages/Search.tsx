@@ -176,20 +176,6 @@ const Search = () => {
 
             </div>
 
-            {/* Right rail: helper */}
-            <aside className="hidden lg:block">
-              <div className="sticky top-20 bg-panel border border-border-subtle rounded-xl p-4">
-                <h3 className="text-xs uppercase tracking-wide text-muted-foreground">
-                  How this works
-                </h3>
-                <p className="mt-2 text-xs text-muted-foreground/80 leading-relaxed">
-                  Pick a facility to see its full trust report — sub-scores, evidence, contradictions, and a map view of its location.
-                </p>
-                <p className="mt-3 text-xs text-muted-foreground/60">
-                  {results.length} facilities matched your query.
-                </p>
-              </div>
-            </aside>
           </div>
         )}
 
