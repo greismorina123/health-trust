@@ -658,6 +658,24 @@ const FacilityVerificationPanel = ({ facility, detail, isLoadingDetail, subScore
 // Referral Risk Map (right rail)
 // =============================================================================
 
+const CollapsedRiskRail = ({ onExpand }: { onExpand: () => void }) => (
+  <button
+    type="button"
+    onClick={onExpand}
+    aria-label="Expand referral risk map"
+    className="rounded-xl border border-border-subtle bg-panel hover:bg-panel-elevated/60 transition-colors flex flex-col items-center justify-start gap-2 py-3 w-[44px]"
+  >
+    <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground" />
+    <ShieldAlert className="h-4 w-4 text-trust-low" />
+    <span
+      className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mt-1"
+      style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+    >
+      Risk Map
+    </span>
+  </button>
+);
+
 const ReferralRiskMap = ({
   regions,
   region,
