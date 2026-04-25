@@ -40,6 +40,7 @@ export const FacilityDetail = ({ facility, onClose, standalone }: Props) => {
 
   const [barsVisible, setBarsVisible] = useState(false);
   const [claimsOpen, setClaimsOpen] = useState(true);
+  const [subScoresOpen, setSubScoresOpen] = useState(false);
 
   useEffect(() => {
     setBarsVisible(false);
