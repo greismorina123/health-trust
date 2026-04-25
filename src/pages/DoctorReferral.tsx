@@ -113,7 +113,10 @@ const DoctorReferral = () => {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const q = query.trim();
-    if (!q) return;
+    if (!q) {
+      toast("Please enter a search query");
+      return;
+    }
     setSubmitted(q);
     setSelected(null);
     void runSearch(q);
