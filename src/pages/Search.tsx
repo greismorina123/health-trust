@@ -113,7 +113,7 @@ const Search = () => {
 
         {/* Reasoning + Results */}
         {submittedQuery && (
-          <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_280px]">
+          <div className="mt-6">
             {/* Left: results list, then reasoning at the end */}
             <div className="space-y-6">
               {/* Results list */}
