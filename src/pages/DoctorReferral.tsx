@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Search as SearchIcon, AlertTriangle, MapPin, ShieldAlert, ArrowLeft, ChevronDown, Stethoscope, Loader2 } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { SearchMap } from "@/components/SearchMap";
@@ -638,29 +638,41 @@ const ReferralRiskMap = ({
         </div>
         <div>
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Nearest verified alternatives</p>
-          <ul className="mt-1 space-y-1">
-            {region.nearestVerifiedAlternatives.map((a, i) => (
-              <li key={a.name} className="text-xs text-foreground/90 flex items-center justify-between gap-2">
-                <span>
-                  <span className="text-muted-foreground">{i + 1}.</span> {a.name}
-                </span>
-                <span className="text-muted-foreground">
-                  {a.distanceKm} km · <span style={{ color: trustHsl(a.trustScore) }}>{a.trustScore}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
+          {region.nearestVerifiedAlternatives.length > 0 ? (
+            <ul className="mt-1 space-y-1">
+              {region.nearestVerifiedAlternatives.map((a, i) => (
+                <li key={a.name} className="text-xs text-foreground/90 flex items-center justify-between gap-2">
+                  <span>
+                    <span className="text-muted-foreground">{i + 1}.</span> {a.name}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {a.distanceKm} km · <span style={{ color: trustHsl(a.trustScore) }}>{a.trustScore}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-1 text-xs text-muted-foreground/70 italic">
+              Nearest verified alternatives unavailable from current API.
+            </p>
+          )}
         </div>
         <div>
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Contradictions found</p>
-          <ul className="mt-1 space-y-1">
-            {region.contradictionsFound.map((c, i) => (
-              <li key={i} className="text-xs text-muted-foreground flex gap-1.5">
-                <span className="text-trust-low">•</span>
-                <span>{c}</span>
-              </li>
-            ))}
-          </ul>
+          {region.contradictionsFound.length > 0 ? (
+            <ul className="mt-1 space-y-1">
+              {region.contradictionsFound.map((c, i) => (
+                <li key={i} className="text-xs text-muted-foreground flex gap-1.5">
+                  <span className="text-trust-low">•</span>
+                  <span>{c}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-1 text-xs text-muted-foreground/70 italic">
+              District-level contradictions unavailable. Open facility records for details.
+            </p>
+          )}
         </div>
         <div>
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Recommended follow-up</p>
