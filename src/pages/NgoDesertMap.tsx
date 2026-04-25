@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Building2, Download, Filter } from "lucide-react";
+import { Building2, Download, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { DesertMap } from "@/components/DesertMap";
 import { Disclaimer } from "@/components/Disclaimer";
@@ -28,6 +28,7 @@ const NgoDesertMap = () => {
   const [ruralOnly, setRuralOnly] = useState(false);
   const [minCompleteness, setMinCompleteness] = useState(0);
   const [desertRegions, setDesertRegions] = useState<DesertRegion[]>(fallbackDesertRegions);
+  const [detailCollapsed, setDetailCollapsed] = useState(false);
   const [selectedId, setSelectedId] = useState<string>(fallbackDesertRegions[0].id);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -171,12 +172,28 @@ const NgoDesertMap = () => {
         </section>
 
         {/* Map + Risk table */}
-        <div className="grid gap-4 lg:grid-cols-[1fr_420px]">
+        <div className={cn("grid gap-4", detailCollapsed ? "lg:grid-cols-[1fr_44px]" : "lg:grid-cols-[1fr_420px]")}>
           <div className="rounded-xl border border-border-subtle bg-panel overflow-hidden h-[460px] lg:h-[600px]">
             <DesertMap regions={filtered} selectedId={selected?.id ?? null} onSelect={(r) => setSelectedId(r.id)} />
           </div>
-          {selected ? (
-            <RegionDetail region={selected} />
+          {detailCollapsed ? (
+            <button
+              type="button"
+              onClick={() => setDetailCollapsed(false)}
+              aria-label="Expand selected region panel"
+              className="rounded-xl border border-border-subtle bg-panel hover:bg-panel-elevated/60 transition-colors flex flex-col items-center justify-start gap-2 py-3 w-[44px]"
+            >
+              <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground" />
+              <Building2 className="h-4 w-4 text-primary" />
+              <span
+                className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mt-1"
+                style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+              >
+                Selected region
+              </span>
+            </button>
+          ) : selected ? (
+            <RegionDetail region={selected} onCollapse={() => setDetailCollapsed(true)} />
           ) : (
             <div className="rounded-xl border border-border-subtle bg-panel p-6 text-center text-sm text-muted-foreground">
               No regions match your filters.
@@ -267,13 +284,25 @@ const Td = ({ children, className, style, title }: { children: React.ReactNode; 
   </td>
 );
 
-const RegionDetail = ({ region }: { region: DesertRegion }) => (
+const RegionDetail = ({ region, onCollapse }: { region: DesertRegion; onCollapse?: () => void }) => (
   <aside className="rounded-xl border border-border-subtle bg-panel overflow-hidden flex flex-col">
-    <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between">
+    <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between gap-2">
       <span className="text-xs uppercase tracking-wider text-muted-foreground">Selected region</span>
-      <span className={cn("text-[11px] font-medium rounded-md px-1.5 py-0.5 border", riskBadge(region.riskLevel))}>
-        Risk {region.riskScore}
-      </span>
+      <div className="flex items-center gap-2">
+        <span className={cn("text-[11px] font-medium rounded-md px-1.5 py-0.5 border", riskBadge(region.riskLevel))}>
+          Risk {region.riskScore}
+        </span>
+        {onCollapse && (
+          <button
+            type="button"
+            onClick={onCollapse}
+            aria-label="Collapse selected region panel"
+            className="h-6 w-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-panel-elevated transition-colors"
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
     </div>
     <div className="p-4 space-y-4">
       <div>
