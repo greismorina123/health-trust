@@ -204,17 +204,12 @@ export const FacilityDetail = ({ facility, onClose, standalone }: Props) => {
               <AlertTriangle className="h-3.5 w-3.5 text-trust-low" />
               <p className="text-sm font-medium text-trust-low">Contradictions</p>
             </div>
-            <ul className="space-y-2">
+            <ul className="space-y-1 list-disc pl-4 marker:text-trust-low/60">
               {contradicted.map((c, i) => (
-                <li key={`c-${i}`}>
-                  <p className="text-sm text-foreground/90">{c.claim}</p>
-                  <p className="text-xs text-trust-low/70 italic mt-0.5">Evidence: {c.source_text}</p>
-                </li>
+                <li key={`c-${i}`} className="text-sm text-foreground/90">{c.claim}</li>
               ))}
               {facility.red_flags.map((f, i) => (
-                <li key={`f-${i}`}>
-                  <p className="text-sm text-foreground/90">{f}</p>
-                </li>
+                <li key={`f-${i}`} className="text-sm text-foreground/90">{f}</li>
               ))}
             </ul>
           </div>
