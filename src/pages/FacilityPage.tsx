@@ -35,7 +35,7 @@ const FacilityPage = () => {
             <ArrowLeft className="h-3.5 w-3.5" />
             Back
           </button>
-          <div className="bg-panel border border-border-subtle rounded-xl overflow-hidden">
+          <div className="bg-background border border-border-subtle rounded-xl overflow-hidden">
             <FacilityDetail facility={facility} standalone />
           </div>
         </div>
