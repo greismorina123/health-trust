@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { Search as SearchIcon, AlertTriangle, MapPin, X, ArrowLeft, ShieldAlert, Sparkles, Loader2 } from "lucide-react";
+import { Search as SearchIcon, AlertTriangle, MapPin, X, ArrowLeft, ShieldAlert, Sparkles, Loader2, ChevronDown } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { SearchMap } from "@/components/SearchMap";
 import { FacilityDetail } from "@/components/FacilityDetail";
@@ -35,6 +35,7 @@ const Search = () => {
   const [submittedQuery, setSubmittedQuery] = useState<string | null>(initialQ || null);
   const [selected, setSelected] = useState<Facility | null>(null);
   const [showMap, setShowMap] = useState(true);
+  const [agentStepsOpen, setAgentStepsOpen] = useState(false);
 
   const [pins, setPins] = useState<Facility[]>([]);
   const [results, setResults] = useState<Facility[]>([]);
@@ -286,40 +287,58 @@ const Search = () => {
 
             {/* Agent Steps + query plan */}
             <aside className="rounded-xl border border-border-subtle bg-panel overflow-hidden h-fit">
-              <div className="px-4 py-3 border-b border-border-subtle flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setAgentStepsOpen((v) => !v)}
+                className="w-full px-4 py-3 border-b border-border-subtle flex items-center gap-2 hover:bg-panel-elevated/40 transition-colors"
+                aria-expanded={agentStepsOpen}
+              >
                 <Sparkles className="h-3.5 w-3.5 text-primary" />
                 <span className="text-xs font-medium text-foreground">Agent Steps</span>
-              </div>
-              <ol className="p-3 space-y-2.5">
-                {agentSteps.map((s, i) => (
-                  <li key={i} className="flex items-start gap-2.5">
-                    <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-panel-elevated text-[10px] font-medium text-foreground shrink-0">
-                      {i + 1}
-                    </span>
-                    <div>
-                      <p className="text-xs font-medium text-foreground">{s.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{s.detail}</p>
+                <span className="ml-auto inline-flex items-center gap-1.5">
+                  <span className="text-[10px] text-muted-foreground">{agentSteps.length} steps</span>
+                  <ChevronDown
+                    className={cn(
+                      "h-3.5 w-3.5 text-muted-foreground transition-transform",
+                      agentStepsOpen && "rotate-180",
+                    )}
+                  />
+                </span>
+              </button>
+              {agentStepsOpen && (
+                <>
+                  <ol className="p-3 space-y-2.5">
+                    {agentSteps.map((s, i) => (
+                      <li key={i} className="flex items-start gap-2.5">
+                        <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-panel-elevated text-[10px] font-medium text-foreground shrink-0">
+                          {i + 1}
+                        </span>
+                        <div>
+                          <p className="text-xs font-medium text-foreground">{s.title}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{s.detail}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                  {queryPlan && (
+                    <div className="border-t border-border-subtle p-3 space-y-1.5">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Query plan</p>
+                      <p className="text-xs text-foreground/85">
+                        Location: {queryPlan.location_filters.city ?? queryPlan.location_filters.state ?? "Any"}
+                      </p>
+                      {queryPlan.capability_filters.length > 0 && (
+                        <p className="text-xs text-foreground/85">
+                          Capabilities: {queryPlan.capability_filters.join(", ")}
+                        </p>
+                      )}
+                      {queryPlan.constraints.length > 0 && (
+                        <p className="text-xs text-foreground/85">
+                          Constraints: {queryPlan.constraints.join(", ")}
+                        </p>
+                      )}
                     </div>
-                  </li>
-                ))}
-              </ol>
-              {queryPlan && (
-                <div className="border-t border-border-subtle p-3 space-y-1.5">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Query plan</p>
-                  <p className="text-xs text-foreground/85">
-                    Location: {queryPlan.location_filters.city ?? queryPlan.location_filters.state ?? "Any"}
-                  </p>
-                  {queryPlan.capability_filters.length > 0 && (
-                    <p className="text-xs text-foreground/85">
-                      Capabilities: {queryPlan.capability_filters.join(", ")}
-                    </p>
                   )}
-                  {queryPlan.constraints.length > 0 && (
-                    <p className="text-xs text-foreground/85">
-                      Constraints: {queryPlan.constraints.join(", ")}
-                    </p>
-                  )}
-                </div>
+                </>
               )}
             </aside>
           </div>
