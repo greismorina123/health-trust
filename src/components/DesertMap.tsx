@@ -98,11 +98,13 @@ export const DesertMap = ({ regions, selectedId, onSelect }: Props) => {
             }}
             eventHandlers={{ click: () => onSelect(r) }}
           >
-            <Tooltip direction="top" offset={[0, -8]} opacity={1} className="!bg-transparent !border-0 !shadow-none">
-              <span style={{ display: "block", lineHeight: 1.3 }}>
-                <strong>{r.areaName}</strong>
+            <Tooltip direction="top" offset={[0, -8]} opacity={1} className="desert-tooltip">
+              <span style={{ display: "block", lineHeight: 1.35 }}>
+                <strong style={{ fontSize: "13px" }}>{r.areaName}</strong>
                 <br />
-                {r.missingCapability} · risk {r.riskScore}
+                <span style={{ fontSize: "12px", opacity: 0.85 }}>
+                  {r.missingCapability} · risk {r.riskScore}
+                </span>
               </span>
             </Tooltip>
           </CircleMarker>
