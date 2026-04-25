@@ -8,8 +8,6 @@ import {
   desertZones,
   facilities,
   severityHsl,
-  severityRadius,
-  trustHsl,
   trustTier,
 } from "@/data/facilities";
 import { useTheme } from "./ThemeProvider";
