@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Building2, Download, Filter, ShieldAlert } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { DesertMap } from "@/components/DesertMap";
@@ -7,10 +7,11 @@ import {
   type DesertRegion,
   type RiskLevel,
   capabilityFilters,
-  desertRegions,
+  desertRegions as fallbackDesertRegions,
   SAFETY_NOTE,
 } from "@/data/roleData";
 import { trustHsl } from "@/data/facilities";
+import { desertRegionFromDistrict, getDistricts } from "@/services/trustmapApi";
 import { cn } from "@/lib/utils";
 
 const riskBadge = (level: RiskLevel) =>
@@ -23,14 +24,40 @@ const riskBadge = (level: RiskLevel) =>
 const NgoDesertMap = () => {
   const [capability, setCapability] = useState<CapabilityKey | "all">("all");
   const [state, setState] = useState<string>("all");
-  const [trustThreshold, setTrustThreshold] = useState<number>(0); // include regions where avg trust < threshold or 0 = all
+  const [trustThreshold, setTrustThreshold] = useState<number>(0);
   const [ruralOnly, setRuralOnly] = useState(false);
   const [minCompleteness, setMinCompleteness] = useState(0);
-  const [selectedId, setSelectedId] = useState<string>(desertRegions[0].id);
+  const [desertRegions, setDesertRegions] = useState<DesertRegion[]>(fallbackDesertRegions);
+  const [selectedId, setSelectedId] = useState<string>(fallbackDesertRegions[0].id);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const districts = await getDistricts();
+        if (cancelled) return;
+        const mapped = districts
+          .map(desertRegionFromDistrict)
+          .sort((a, b) => b.riskScore - a.riskScore);
+        if (mapped.length > 0) {
+          setDesertRegions(mapped);
+          setSelectedId(mapped[0].id);
+        }
+      } catch {
+        // keep fallback
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const stateOptions = useMemo(
     () => Array.from(new Set(desertRegions.map((r) => r.state))).sort(),
-    [],
+    [desertRegions],
   );
 
   const filtered = useMemo(() => {
