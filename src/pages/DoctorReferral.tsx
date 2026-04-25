@@ -434,6 +434,7 @@ const FacilityVerificationPanel = ({ facility, detail, isLoadingDetail, subScore
   const score = useCountUp(facility.trust_score, 800, facility.id);
   const apiCaution = cautionFromScore(facility.trust_score);
   const cs = cautionStyles[v?.referralCaution ?? apiCaution];
+  const [capabilitiesOpen, setCapabilitiesOpen] = useState(true);
 
   // Prefer real API data when present; fallback to local mock verifications.
   const apiCapabilities = detail?.capability_claims ?? [];
@@ -505,50 +506,56 @@ const FacilityVerificationPanel = ({ facility, detail, isLoadingDetail, subScore
       {/* Capability Verification — prefer API data, fall back to mock */}
       {(apiCapabilities.length > 0 || v) && (
         <section className="p-5 border-b border-border-subtle">
-          <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-3">
-            Capability Verification
-          </h3>
-          <ul className="space-y-2.5">
-            {apiCapabilities.length > 0
-              ? apiCapabilities.map((c, i) => {
-                  const status =
-                    c.status === "confirmed"
-                      ? "Verified"
-                      : c.status === "inferred"
-                        ? "Inferred"
-                        : c.status === "contradicted"
-                          ? "Contradicted"
-                          : "Unknown";
-                  return (
-                    <li key={`${c.capability}-${i}`} className="rounded-lg border border-border-subtle bg-background/40 p-3">
+          <button
+            onClick={() => setCapabilitiesOpen(!capabilitiesOpen)}
+            className="w-full flex items-center justify-between text-xs font-medium uppercase tracking-wide text-muted-foreground"
+          >
+            <span>Capability Verification</span>
+            <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", !capabilitiesOpen && "-rotate-90")} />
+          </button>
+          {capabilitiesOpen && (
+            <ul className="space-y-2.5 mt-3">
+              {apiCapabilities.length > 0
+                ? apiCapabilities.map((c, i) => {
+                    const status =
+                      c.status === "confirmed"
+                        ? "Verified"
+                        : c.status === "inferred"
+                          ? "Inferred"
+                          : c.status === "contradicted"
+                            ? "Contradicted"
+                            : "Unknown";
+                    return (
+                      <li key={`${c.capability}-${i}`} className="rounded-lg border border-border-subtle bg-background/40 p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm text-foreground font-medium capitalize">{c.capability}</span>
+                          <span className={cn("text-[11px] font-medium rounded-md px-1.5 py-0.5", capabilityStatusStyles[status])}>
+                            {status}
+                          </span>
+                        </div>
+                        <div className="mt-1.5 text-xs text-muted-foreground">
+                          Source field: <span className="text-foreground/80">{c.evidence_field}</span>
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground/80 italic line-clamp-2">{c.evidence_snippet}</p>
+                      </li>
+                    );
+                  })
+                : v!.capabilities.map((c) => (
+                    <li key={c.name} className="rounded-lg border border-border-subtle bg-background/40 p-3">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm text-foreground font-medium capitalize">{c.capability}</span>
-                        <span className={cn("text-[11px] font-medium rounded-md px-1.5 py-0.5", capabilityStatusStyles[status])}>
-                          {status}
+                        <span className="text-sm text-foreground font-medium">{c.name}</span>
+                        <span className={cn("text-[11px] font-medium rounded-md px-1.5 py-0.5", capabilityStatusStyles[c.status])}>
+                          {c.status}
                         </span>
                       </div>
                       <div className="mt-1.5 text-xs text-muted-foreground">
-                        Source field: <span className="text-foreground/80">{c.evidence_field}</span>
+                        Source field: <span className="text-foreground/80">{c.sourceField}</span>
                       </div>
-                      <p className="mt-1 text-xs text-muted-foreground/80 italic line-clamp-2">{c.evidence_snippet}</p>
+                      <p className="mt-1 text-xs text-muted-foreground/80 italic line-clamp-2">{c.evidenceSnippet}</p>
                     </li>
-                  );
-                })
-              : v!.capabilities.map((c) => (
-                  <li key={c.name} className="rounded-lg border border-border-subtle bg-background/40 p-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm text-foreground font-medium">{c.name}</span>
-                      <span className={cn("text-[11px] font-medium rounded-md px-1.5 py-0.5", capabilityStatusStyles[c.status])}>
-                        {c.status}
-                      </span>
-                    </div>
-                    <div className="mt-1.5 text-xs text-muted-foreground">
-                      Source field: <span className="text-foreground/80">{c.sourceField}</span>
-                    </div>
-                    <p className="mt-1 text-xs text-muted-foreground/80 italic line-clamp-2">{c.evidenceSnippet}</p>
-                  </li>
-                ))}
-          </ul>
+                  ))}
+            </ul>
+          )}
         </section>
       )}
 
