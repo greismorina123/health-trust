@@ -228,25 +228,28 @@ export const FacilityDetail = ({ facility, onClose, standalone }: Props) => {
         )}
       </section>
 
-      {/* Contradictions */}
-      {(contradicted.length > 0 || facility.red_flags.length > 0) && (
-        <section className="p-5 border-b border-border-subtle">
-          <div className="rounded-lg border border-trust-low/20 bg-trust-low/5 p-4">
-            <div className="flex items-center gap-1.5 mb-2">
-              <AlertTriangle className="h-3.5 w-3.5 text-trust-low" />
-              <p className="text-sm font-medium text-trust-low">Contradictions</p>
+      {/* Contradictions — translated into user impact */}
+      {(contradicted.length > 0 || facility.red_flags.length > 0) && (() => {
+        const bullets = userImpactBullets(
+          contradicted.map((c) => c.claim),
+          facility.red_flags,
+        );
+        return (
+          <section className="p-5 border-b border-border-subtle">
+            <div className="rounded-lg border border-trust-low/20 bg-trust-low/5 p-4">
+              <div className="flex items-center gap-1.5 mb-1">
+                <AlertTriangle className="h-3.5 w-3.5 text-trust-low" />
+                <p className="text-sm font-medium text-trust-low">What this means for you</p>
+              </div>
+              <ul className="mt-2 space-y-1.5 list-disc pl-4 marker:text-trust-low/60">
+                {bullets.map((b, i) => (
+                  <li key={`u-${i}`} className="text-sm text-foreground/90 leading-snug">{b}</li>
+                ))}
+              </ul>
             </div>
-            <ul className="space-y-1 list-disc pl-4 marker:text-trust-low/60">
-              {contradicted.map((c, i) => (
-                <li key={`c-${i}`} className="text-sm text-foreground/90">{c.claim}</li>
-              ))}
-              {facility.red_flags.map((f, i) => (
-                <li key={`f-${i}`} className="text-sm text-foreground/90">{f}</li>
-              ))}
-            </ul>
-          </div>
-        </section>
-      )}
+          </section>
+        );
+      })()}
 
       {/* Reasoning Summary */}
       <section className="p-5">
