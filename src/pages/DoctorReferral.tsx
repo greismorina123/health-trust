@@ -356,7 +356,16 @@ const DoctorReferral = () => {
               })}
             </section>
 
-            <ReferralRiskMap regions={referralRegions} region={region} setRegion={setRegion} />
+            {riskMapCollapsed ? (
+              <CollapsedRiskRail onExpand={() => setRiskMapCollapsed(false)} />
+            ) : (
+              <ReferralRiskMap
+                regions={referralRegions}
+                region={region}
+                setRegion={setRegion}
+                onCollapse={() => setRiskMapCollapsed(true)}
+              />
+            )}
           </div>
         )}
 
