@@ -34,31 +34,12 @@ const Search = () => {
   const [query, setQuery] = useState(initialQ);
   const [submittedQuery, setSubmittedQuery] = useState<string | null>(initialQ || null);
 
-  const [activeStep, setActiveStep] = useState<number>(-1);
-  const [stepsDone, setStepsDone] = useState(false);
-  const [expandedStep, setExpandedStep] = useState<number | null>(null);
-
   const [selected, setSelected] = useState<Facility | null>(null);
   const [showMap, setShowMap] = useState(true);
 
   const results = useMemo(() => {
     if (!submittedQuery) return [];
     return [...facilities].sort((a, b) => b.trust_score - a.trust_score);
-  }, [submittedQuery]);
-
-  useEffect(() => {
-    if (!submittedQuery) return;
-    setStepsDone(false);
-    setActiveStep(0);
-    setExpandedStep(null);
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    chainOfThoughtSteps.forEach((_, i) => {
-      timers.push(setTimeout(() => setActiveStep(i + 1), (i + 1) * 350));
-    });
-    timers.push(
-      setTimeout(() => setStepsDone(true), chainOfThoughtSteps.length * 350 + 200),
-    );
-    return () => timers.forEach(clearTimeout);
   }, [submittedQuery]);
 
   const submit = (e: FormEvent) => {
