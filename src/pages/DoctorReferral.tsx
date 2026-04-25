@@ -320,6 +320,8 @@ const DoctorReferral = () => {
               <div className="grid gap-4 lg:grid-cols-[1fr_460px]">
                 <FacilityVerificationPanel
                   facility={selected}
+                  detail={selectedDetail}
+                  isLoadingDetail={isLoadingDetail}
                   subScoresOpen={subScoresOpen}
                   setSubScoresOpen={setSubScoresOpen}
                 />
