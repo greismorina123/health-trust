@@ -70,6 +70,7 @@ const DoctorReferral = () => {
     fallbackDesertRegions.filter((r) => r.riskLevel === "high")[0],
   );
   const [subScoresOpen, setSubScoresOpen] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
 
   // Load district risk regions from API
   useEffect(() => {
