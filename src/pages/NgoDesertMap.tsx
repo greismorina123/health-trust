@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Building2, Download, Filter } from "lucide-react";
+import { Building2, Download, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { DesertMap } from "@/components/DesertMap";
 import { Disclaimer } from "@/components/Disclaimer";
