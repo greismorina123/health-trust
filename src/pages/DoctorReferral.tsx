@@ -95,18 +95,49 @@ const DoctorReferral = () => {
     };
   }, []);
 
+  const runSearch = async (q: string) => {
+    setIsSearching(true);
+    setSearchError(null);
+    try {
+      const resp = await searchFacilities(q);
+      setResults(resp.results.map(facilityFromSearchResult));
+    } catch {
+      setSearchError("Search failed. Showing fallback data.");
+      setResults([...fallbackFacilities].sort((a, b) => b.trust_score - a.trust_score));
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const q = query.trim();
     if (!q) return;
     setSubmitted(q);
     setSelected(null);
+    void runSearch(q);
   };
 
   const runChip = (text: string) => {
     setQuery(text);
     setSubmitted(text);
     setSelected(null);
+    void runSearch(text);
+  };
+
+  const openFacility = async (f: Facility) => {
+    setSelected(f);
+    setSelectedDetail(null);
+    setIsLoadingDetail(true);
+    try {
+      const detail = await getFacilityDetail(f.id);
+      setSelectedDetail(detail);
+      setSelected(facilityFromDetail(detail));
+    } catch {
+      setSelected({ ...f, summary: "Detailed facility record unavailable." });
+    } finally {
+      setIsLoadingDetail(false);
+    }
   };
 
   useEffect(() => {
