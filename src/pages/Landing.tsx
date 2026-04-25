@@ -69,15 +69,15 @@ const Landing = () => {
         </section>
 
         <section className="max-w-3xl mx-auto mt-20 fade-up">
-          <div className="rounded-2xl border border-border-subtle bg-panel p-8 sm:p-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 text-center sm:text-left">
+          <div className="rounded-xl border border-border-subtle bg-panel px-6 py-5 sm:px-7 sm:py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-center sm:text-left">
             <div>
-              <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
+              <h2 className="text-base sm:text-lg font-semibold text-foreground">
                 Already have an account?
               </h2>
             </div>
             <Link
               to="/login"
-              className="h-12 px-8 inline-flex items-center justify-center rounded-xl bg-primary text-primary-foreground text-base font-medium hover:opacity-90 transition-opacity shrink-0"
+              className="h-10 px-6 inline-flex items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity shrink-0"
             >
               Sign In
             </Link>
