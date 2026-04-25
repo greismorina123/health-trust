@@ -79,6 +79,8 @@ const NgoDesertMap = () => {
     [filtered, selectedId],
   );
 
+  if (role !== "ngo") return <Navigate to={dashboardPathFor(role)} replace />;
+
   return (
     <div className="min-h-screen bg-background">
       <Nav variant="app" />

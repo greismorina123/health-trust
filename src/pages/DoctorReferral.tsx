@@ -155,6 +155,8 @@ const DoctorReferral = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, [selected]);
 
+  if (role !== "doctor") return <Navigate to={dashboardPathFor(role)} replace />;
+
   return (
     <div className="min-h-screen bg-background">
       <Nav variant="app" />
