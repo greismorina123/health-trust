@@ -44,8 +44,8 @@ const AboutPage = () => {
       {/* THREE STEPS */}
       <div className="mt-10 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_1fr] items-stretch gap-3">
         {steps.map((s, i) => (
-          <>
-            <div key={s.title} className="rounded-xl bg-card border border-border p-6">
+          <div key={s.title} className="contents">
+            <div className="rounded-xl bg-card border border-border p-6">
               <div className={`w-10 h-10 rounded-lg grid place-items-center ${s.bg}`}>
                 <s.Icon className={`w-5 h-5 ${s.color}`} />
               </div>
@@ -53,11 +53,11 @@ const AboutPage = () => {
               <p className="mt-2 text-sm text-foreground/80 leading-relaxed">{s.body}</p>
             </div>
             {i < steps.length - 1 && (
-              <div key={`arrow-${i}`} className="hidden md:grid place-items-center text-border">
+              <div className="hidden md:grid place-items-center text-border">
                 <ArrowRight className="w-5 h-5" />
               </div>
             )}
-          </>
+          </div>
         ))}
       </div>
 
