@@ -31,6 +31,7 @@ import {
 } from "@/services/trustmapApi";
 import { useCountUp } from "@/hooks/useCountUp";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const trustBadgeClass = (score: number) => {
   const t = trustTier(score);
