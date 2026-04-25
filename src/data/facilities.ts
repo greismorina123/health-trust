@@ -31,6 +31,7 @@ export interface Facility {
   lat: number;
   lng: number;
   claims: Claim[];
+  red_flags: string[];
   web_verification: WebVerification;
 }
 
