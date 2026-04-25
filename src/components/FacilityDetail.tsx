@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Globe } from "lucide-react";
+import { AlertTriangle, ChevronDown, Globe, X } from "lucide-react";
 import {
+  type Claim,
   type Facility,
   trustHsl,
   trustTextClass,
@@ -11,59 +12,62 @@ import { cn } from "@/lib/utils";
 
 interface Props {
   facility: Facility;
-  onBack?: () => void;
-  /** When true, renders without the back button (e.g., standalone page). */
+  onClose?: () => void;
+  /** When true, renders without the close button (e.g., standalone /facility/:id page). */
   standalone?: boolean;
 }
 
 const subScoreLabels: Array<[keyof Facility["sub_scores"], string]> = [
-  ["consistency", "Consistency"],
-  ["plausibility", "Plausibility"],
-  ["activity", "Activity"],
+  ["consistency", "Internal Consistency"],
+  ["plausibility", "Capability Plausibility"],
+  ["activity", "Activity Signal"],
   ["completeness", "Completeness"],
 ];
 
-const statusDotClass: Record<string, string> = {
-  confirmed: "bg-status-confirmed",
-  inferred: "bg-status-inferred",
-  contradicted: "bg-status-contradicted",
-  unknown: "bg-status-unknown",
+const claimBadge: Record<Claim["status"], { label: string; cls: string }> = {
+  confirmed: { label: "Confirmed", cls: "bg-trust-high/15 text-trust-high" },
+  inferred: { label: "Inferred", cls: "bg-primary/15 text-primary" },
+  contradicted: { label: "Contradicted", cls: "bg-trust-low/15 text-trust-low" },
+  unknown: { label: "Unknown", cls: "bg-panel-elevated text-muted-foreground" },
 };
 
-export const FacilityDetail = ({ facility, onBack, standalone }: Props) => {
-  const score = useCountUp(facility.trust_score, 700, facility.id);
+export const FacilityDetail = ({ facility, onClose, standalone }: Props) => {
+  const score = useCountUp(facility.trust_score, 800, facility.id);
   const ringColor = trustHsl(facility.trust_score);
-  const radius = 28;
+  const radius = 36;
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference * (1 - facility.trust_score / 100);
 
   const [barsVisible, setBarsVisible] = useState(false);
+  const [claimsOpen, setClaimsOpen] = useState(true);
+
   useEffect(() => {
     setBarsVisible(false);
-    const t = setTimeout(() => setBarsVisible(true), 200);
+    const t = setTimeout(() => setBarsVisible(true), 300);
     return () => clearTimeout(t);
   }, [facility.id]);
 
   const contradicted = facility.claims.filter((c) => c.status === "contradicted");
+  const [ciLow, ciHigh] = facility.confidence_interval;
 
   return (
-    <div className="slide-in-left" key={facility.id}>
-      {!standalone && onBack && (
+    <div key={facility.id}>
+      {!standalone && onClose && (
         <button
-          onClick={onBack}
-          className="flex items-center gap-1 px-4 pt-4 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          onClick={onClose}
+          className="absolute top-3 right-3 z-10 h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-panel-elevated transition-colors"
+          aria-label="Close"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Back to results
+          <X className="h-3.5 w-3.5" />
         </button>
       )}
 
       {/* Header */}
-      <header className="p-4 border-b border-border-subtle">
-        <h2 className="text-base font-semibold text-foreground leading-tight">
+      <header className="p-5 border-b border-border-subtle pr-12">
+        <h2 className="text-lg font-semibold text-foreground leading-tight">
           {facility.name}
         </h2>
-        <p className="text-xs text-muted-foreground mt-0.5">
+        <p className="text-sm text-muted-foreground mt-1">
           {facility.district}, {facility.state}
         </p>
         <span className="inline-block mt-2 px-2 py-0.5 rounded-md bg-panel-elevated text-xs text-muted-foreground border border-border-subtle">
@@ -72,50 +76,72 @@ export const FacilityDetail = ({ facility, onBack, standalone }: Props) => {
       </header>
 
       {/* Trust Score */}
-      <section className="p-4 border-b border-border-subtle flex items-center gap-4">
-        <div className="flex flex-col">
-          <span className={cn("text-4xl font-bold leading-none", trustTextClass(facility.trust_score))}>
-            {score}
-          </span>
-          <span className="text-xs text-muted-foreground mt-1">/100</span>
-        </div>
-        <div className="ml-auto relative" style={{ width: 64, height: 64 }}>
-          <svg width="64" height="64" viewBox="0 0 64 64">
-            <circle cx="32" cy="32" r={radius} stroke="hsl(var(--panel-elevated))" strokeWidth="4" fill="none" />
+      <section className="p-5 border-b border-border-subtle flex flex-col items-center">
+        <div className="relative" style={{ width: 80, height: 80 }}>
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r={radius} stroke="hsl(var(--panel-elevated))" strokeWidth="5" fill="none" />
             <circle
-              cx="32"
-              cy="32"
+              cx="40"
+              cy="40"
               r={radius}
               stroke={ringColor}
-              strokeWidth="4"
+              strokeWidth="5"
               fill="none"
               strokeLinecap="round"
               strokeDasharray={circumference}
               strokeDashoffset={dashOffset}
-              transform="rotate(-90 32 32)"
+              transform="rotate(-90 40 40)"
               style={{ transition: "stroke-dashoffset 800ms cubic-bezier(0.22, 1, 0.36, 1)" }}
             />
           </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className={cn("text-3xl font-bold leading-none", trustTextClass(facility.trust_score))}>
+              {score}
+            </span>
+          </div>
+        </div>
+        <span className="text-xs text-muted-foreground mt-1">/100</span>
+
+        {/* Confidence interval */}
+        <div className="w-48 mt-3">
+          <div className="relative h-1 rounded-full bg-panel-elevated">
+            <div
+              className="absolute h-1 rounded-full"
+              style={{
+                left: `${ciLow}%`,
+                width: `${ciHigh - ciLow}%`,
+                background: ringColor,
+                opacity: 0.5,
+              }}
+            />
+          </div>
+          <div className="flex justify-between mt-1 text-xs text-muted-foreground">
+            <span>{ciLow}</span>
+            <span>{ciHigh}</span>
+          </div>
+          <p className="text-xs text-muted-foreground/70 italic text-center mt-0.5">
+            Confidence interval
+          </p>
         </div>
       </section>
 
       {/* Sub-Scores */}
-      <section className="p-4 border-b border-border-subtle space-y-3">
+      <section className="p-5 border-b border-border-subtle space-y-3">
         {subScoreLabels.map(([key, label], i) => {
           const value = facility.sub_scores[key];
           const pct = (value / 25) * 100;
           return (
             <div key={key}>
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs text-muted-foreground">{label}</span>
-                <span className="text-xs text-foreground font-medium">{value}/25</span>
+                <span className="text-sm text-muted-foreground">{label}</span>
+                <span className="text-sm text-foreground font-medium">{value}/25</span>
               </div>
-              <div className="h-1 w-full rounded-full bg-panel-elevated overflow-hidden">
+              <div className="h-1.5 w-full rounded-full bg-panel-elevated overflow-hidden">
                 <div
                   className={cn("h-full rounded-full", subScoreColorClass(value))}
                   style={{
                     width: barsVisible ? `${pct}%` : "0%",
-                    transition: `width 600ms cubic-bezier(0.22, 1, 0.36, 1) ${i * 120}ms`,
+                    transition: `width 600ms cubic-bezier(0.22, 1, 0.36, 1) ${i * 150}ms`,
                   }}
                 />
               </div>
@@ -124,39 +150,58 @@ export const FacilityDetail = ({ facility, onBack, standalone }: Props) => {
         })}
       </section>
 
-      {/* Evidence */}
-      <section className="p-4 border-b border-border-subtle">
-        <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">
-          Evidence
-        </h3>
-        <ul>
-          {facility.claims.map((c, i) => (
-            <li key={i} className="py-2 border-b border-border-subtle/50 last:border-0">
-              <div className="flex items-start gap-2">
-                <span className={cn("h-2 w-2 mt-1.5 rounded-full shrink-0", statusDotClass[c.status])} />
-                <p className="text-xs text-foreground leading-snug">{c.claim}</p>
-              </div>
-              <p
-                className="text-xs text-muted-foreground/80 italic mt-1 ml-4 line-clamp-1"
-                title={`${c.source_field} — ${c.source_text}`}
-              >
-                Source: {c.source_field} — {c.source_text}
-              </p>
-            </li>
-          ))}
-        </ul>
+      {/* Capability Claims */}
+      <section className="p-5 border-b border-border-subtle">
+        <button
+          onClick={() => setClaimsOpen((o) => !o)}
+          className="w-full flex items-center justify-between text-sm font-medium text-foreground"
+        >
+          <span>Capability Claims</span>
+          <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", !claimsOpen && "-rotate-90")} />
+        </button>
+        {claimsOpen && (
+          <ul className="mt-2">
+            {facility.claims.map((c, i) => {
+              const b = claimBadge[c.status];
+              return (
+                <li key={i} className="py-2.5 border-b border-border-subtle/50 last:border-0">
+                  <div className="flex items-start gap-2">
+                    <span className={cn("text-xs font-medium rounded-md px-1.5 py-0.5 shrink-0", b.cls)}>
+                      {b.label}
+                    </span>
+                    <p className="text-sm text-foreground leading-snug">{c.claim}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1 ml-1">
+                    Source: {c.source_field}
+                  </p>
+                  <p className="text-xs text-muted-foreground/80 italic ml-1 line-clamp-2" title={c.source_text}>
+                    {c.source_text}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
 
       {/* Contradictions */}
-      {contradicted.length > 0 && (
-        <section className="p-4">
-          <div className="rounded-lg border border-trust-low/20 bg-trust-low/5 p-3">
-            <p className="text-xs font-medium text-trust-low mb-2">Contradictions</p>
+      {(contradicted.length > 0 || facility.red_flags.length > 0) && (
+        <section className="p-5 border-b border-border-subtle">
+          <div className="rounded-lg border border-trust-low/20 bg-trust-low/5 p-4">
+            <div className="flex items-center gap-1.5 mb-2">
+              <AlertTriangle className="h-3.5 w-3.5 text-trust-low" />
+              <p className="text-sm font-medium text-trust-low">Contradictions</p>
+            </div>
             <ul className="space-y-2">
               {contradicted.map((c, i) => (
-                <li key={i}>
-                  <p className="text-xs text-foreground/90">{c.claim}</p>
-                  <p className="text-xs text-trust-low/70 mt-0.5">Evidence: {c.source_text}</p>
+                <li key={`c-${i}`}>
+                  <p className="text-sm text-foreground/90">{c.claim}</p>
+                  <p className="text-xs text-trust-low/70 italic mt-0.5">Evidence: {c.source_text}</p>
+                </li>
+              ))}
+              {facility.red_flags.map((f, i) => (
+                <li key={`f-${i}`}>
+                  <p className="text-sm text-foreground/90">{f}</p>
                 </li>
               ))}
             </ul>
@@ -164,8 +209,16 @@ export const FacilityDetail = ({ facility, onBack, standalone }: Props) => {
         </section>
       )}
 
+      {/* Reasoning Summary */}
+      <section className="p-5">
+        <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Agent Notes
+        </h3>
+        <p className="text-sm text-muted-foreground italic mt-1">{facility.summary}</p>
+      </section>
+
       {/* Web Verification */}
-      <section className="p-3 border-t border-border-subtle flex items-center gap-2">
+      <section className="p-4 border-t border-border-subtle flex items-center gap-2">
         <Globe className="h-3.5 w-3.5 text-muted-foreground" />
         {facility.web_verification.status === "confirmed" && (
           <span className="text-xs text-trust-high">
@@ -178,7 +231,7 @@ export const FacilityDetail = ({ facility, onBack, standalone }: Props) => {
           </span>
         )}
         {facility.web_verification.status === "not_found" && (
-          <span className="text-xs text-trust-low">Not found online</span>
+          <span className="text-xs text-trust-low">No web presence found</span>
         )}
         <span className="text-xs text-muted-foreground ml-auto">via Tavily</span>
       </section>

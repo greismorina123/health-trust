@@ -26,6 +26,7 @@ export interface Facility {
   state: string;
   facility_type: string;
   trust_score: number;
+  confidence_interval: [number, number];
   sub_scores: SubScores;
   summary: string;
   lat: number;
@@ -43,6 +44,7 @@ export const facilities: Facility[] = [
     state: "Maharashtra",
     facility_type: "District Hospital",
     trust_score: 82,
+    confidence_interval: [76, 88],
     sub_scores: { consistency: 20, plausibility: 22, activity: 19, completeness: 21 },
     summary:
       "Verified obstetric surgery capability including C-section. Has 1 part-time anesthesiologist — may limit emergency night availability.",
@@ -64,6 +66,7 @@ export const facilities: Facility[] = [
     state: "Maharashtra",
     facility_type: "Private Clinic",
     trust_score: 58,
+    confidence_interval: [49, 67],
     sub_scores: { consistency: 12, plausibility: 14, activity: 17, completeness: 15 },
     summary:
       "Claims multi-specialty but only 2 doctors listed. Equipment list supports basic surgery but not complex obstetric procedures.",
@@ -84,6 +87,7 @@ export const facilities: Facility[] = [
     state: "Maharashtra",
     facility_type: "Dental Clinic",
     trust_score: 28,
+    confidence_interval: [18, 38],
     sub_scores: { consistency: 3, plausibility: 5, activity: 10, completeness: 10 },
     summary:
       "Dental clinic claiming family medicine and minor surgery. Major consistency failures — likely miscategorized or inflated listing.",
@@ -104,6 +108,7 @@ export const facilities: Facility[] = [
     state: "Maharashtra",
     facility_type: "Teaching Hospital",
     trust_score: 91,
+    confidence_interval: [87, 95],
     sub_scores: { consistency: 23, plausibility: 22, activity: 22, completeness: 24 },
     summary:
       "Major teaching hospital with comprehensive surgical capability. Well-staffed and well-equipped. High data completeness and consistency.",
@@ -125,6 +130,7 @@ export const facilities: Facility[] = [
     state: "Maharashtra",
     facility_type: "PHC",
     trust_score: 55,
+    confidence_interval: [44, 66],
     sub_scores: { consistency: 15, plausibility: 14, activity: 12, completeness: 14 },
     summary:
       "Basic PHC with limited services. Claims 24/7 but single-doctor facility. Adequate for primary care, not emergencies.",
@@ -145,6 +151,7 @@ export const facilities: Facility[] = [
     state: "Maharashtra",
     facility_type: "Private Hospital",
     trust_score: 88,
+    confidence_interval: [83, 93],
     sub_scores: { consistency: 22, plausibility: 21, activity: 22, completeness: 23 },
     summary:
       "Well-known private chain hospital. Comprehensive services with strong equipment and staffing. NABH accredited.",
@@ -191,22 +198,36 @@ export const exampleQueries = [
   "Cardiac care in Hyderabad",
 ];
 
-export const chainOfThoughtSteps = [
+export interface ReasoningStep {
+  title: string;
+  detail: string;
+}
+
+export const chainOfThoughtSteps: ReasoningStep[] = [
   {
-    label: "Decomposing query",
-    detail: "Extracted: location=Maharashtra (rural), service=C-section, urgency=emergency, time-of-day=any.",
+    title: "Planner",
+    detail:
+      "Decomposed query into: location=Maharashtra (rural districts), service=obstetric surgery, time=emergency/24/7, requirement=C-section capability.",
   },
   {
-    label: "Searching 10,000 facilities",
-    detail: "Filtered by geographic radius + obstetric capability flags. 47 candidates surfaced.",
+    title: "Retrieval",
+    detail:
+      "Retrieved 47 candidate facilities matching location and service criteria from 10,000 facility records via vector index.",
   },
   {
-    label: "Scoring candidates",
-    detail: "Computed Trust Score (consistency, plausibility, activity, completeness) for each candidate.",
+    title: "Trust Scoring",
+    detail:
+      "Computed 4-part trust scores: consistency, plausibility, activity, completeness. Filtered to 12 facilities above quality threshold.",
   },
   {
-    label: "Ranking results",
-    detail: "Sorted by trust × proximity × emergency-readiness signal. Top 6 returned.",
+    title: "Verification",
+    detail:
+      "Cross-validated top candidates against equipment logs and staff records. Flagged 3 internal inconsistencies.",
+  },
+  {
+    title: "Ranking",
+    detail:
+      "Ranked 6 final results by composite trust score. Top: Govt Medical College Hospital at 91/100.",
   },
 ];
 
@@ -219,31 +240,30 @@ export interface DesertZone {
   lng: number;
   population: string;
   verified: number;
-  severity: "severe" | "high" | "mid" | "low";
+  severity: "severe" | "moderate" | "low";
   confidence: "low" | "medium" | "high";
+  top_gap: string;
 }
 
 export const desertZones: DesertZone[] = [
-  { id: "d1", district: "Madhubani",     state: "Bihar",          lat: 26.35, lng: 86.07, population: "2.8M", verified: 3,   severity: "severe", confidence: "low" },
-  { id: "d2", district: "Purnia",        state: "Bihar",          lat: 25.78, lng: 87.47, population: "3.3M", verified: 5,   severity: "severe", confidence: "low" },
-  { id: "d3", district: "Deoria",        state: "Uttar Pradesh",  lat: 26.50, lng: 83.98, population: "3.1M", verified: 4,   severity: "severe", confidence: "low" },
-  { id: "d4", district: "Hazaribagh",    state: "Jharkhand",      lat: 23.99, lng: 85.36, population: "1.7M", verified: 6,   severity: "high",   confidence: "medium" },
-  { id: "d5", district: "Mayurbhanj",    state: "Odisha",         lat: 21.94, lng: 86.73, population: "2.5M", verified: 7,   severity: "high",   confidence: "medium" },
-  { id: "d6", district: "Barmer",        state: "Rajasthan",      lat: 25.75, lng: 71.39, population: "2.6M", verified: 8,   severity: "mid",    confidence: "medium" },
-  { id: "d7", district: "Pune",          state: "Maharashtra",    lat: 18.52, lng: 73.86, population: "9.4M", verified: 87,  severity: "low",    confidence: "high" },
-  { id: "d8", district: "Chennai",       state: "Tamil Nadu",     lat: 13.08, lng: 80.27, population: "7.1M", verified: 112, severity: "low",    confidence: "high" },
+  { id: "d1", district: "Madhubani",  state: "Bihar",         lat: 26.35, lng: 86.07, population: "2.8M", verified: 3,   severity: "severe",   confidence: "low",    top_gap: "Dialysis" },
+  { id: "d2", district: "Purnia",     state: "Bihar",         lat: 25.78, lng: 87.47, population: "3.3M", verified: 5,   severity: "severe",   confidence: "low",    top_gap: "Oncology" },
+  { id: "d3", district: "Deoria",     state: "Uttar Pradesh", lat: 26.50, lng: 83.98, population: "3.1M", verified: 4,   severity: "severe",   confidence: "low",    top_gap: "Trauma" },
+  { id: "d4", district: "Hazaribagh", state: "Jharkhand",     lat: 23.99, lng: 85.36, population: "1.7M", verified: 6,   severity: "moderate", confidence: "medium", top_gap: "Neonatal" },
+  { id: "d5", district: "Mayurbhanj", state: "Odisha",        lat: 21.94, lng: 86.73, population: "2.5M", verified: 7,   severity: "moderate", confidence: "medium", top_gap: "Dialysis" },
+  { id: "d6", district: "Barmer",     state: "Rajasthan",     lat: 25.75, lng: 71.39, population: "2.6M", verified: 8,   severity: "moderate", confidence: "medium", top_gap: "Oncology" },
+  { id: "d7", district: "Pune",       state: "Maharashtra",   lat: 18.52, lng: 73.86, population: "9.4M", verified: 87,  severity: "low",      confidence: "high",   top_gap: "None" },
+  { id: "d8", district: "Chennai",    state: "Tamil Nadu",    lat: 13.08, lng: 80.27, population: "7.1M", verified: 112, severity: "low",      confidence: "high",   top_gap: "None" },
 ];
 
 export const severityHsl: Record<DesertZone["severity"], string> = {
   severe: "hsl(var(--severity-severe))",
-  high: "hsl(var(--severity-high))",
-  mid: "hsl(var(--severity-mid))",
+  moderate: "hsl(var(--severity-high))",
   low: "hsl(var(--severity-low))",
 };
 
 export const severityRadius: Record<DesertZone["severity"], number> = {
   severe: 80000,
-  high: 65000,
-  mid: 55000,
+  moderate: 60000,
   low: 45000,
 };

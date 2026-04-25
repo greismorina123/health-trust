@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { CheckCircle2, ChevronDown, ChevronUp, Search as SearchIcon, X } from "lucide-react";
+import { ChevronDown, Search as SearchIcon, X, AlertTriangle } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { SearchMap } from "@/components/SearchMap";
 import { FacilityDetail } from "@/components/FacilityDetail";
 import {
   type DesertZone,
   type Facility,
+  chainOfThoughtSteps,
   facilities,
   trustTier,
 } from "@/data/facilities";
@@ -14,17 +15,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 const queryChips = [
-  "C-section Maharashtra",
-  "Suspicious clinics",
-  "Dialysis deserts",
-  "Cardiac Hyderabad",
-];
-
-const agentSteps = [
-  "Parsing query",
-  "Searching facilities",
-  "Scoring trust",
-  "Ranking",
+  "Suspicious dental clinics in India",
+  "Emergency C-section in rural Maharashtra",
+  "Worst dialysis deserts in India",
+  "Hospitals too good to be true",
 ];
 
 const trustBadgeClass = (score: number) => {
@@ -42,40 +36,45 @@ const Search = () => {
   const initialQ = params.get("q") ?? "";
   const [query, setQuery] = useState(initialQ);
   const [submittedQuery, setSubmittedQuery] = useState<string | null>(initialQ || null);
+
+  // Reasoning steps state — array of step indices that are "done" (passed)
   const [activeStep, setActiveStep] = useState<number>(-1);
-  const [stepsCollapsed, setStepsCollapsed] = useState(false);
   const [stepsDone, setStepsDone] = useState(false);
+  const [expandedStep, setExpandedStep] = useState<number | null>(null);
 
   const [mode, setMode] = useState<"facilities" | "deserts">("facilities");
   const [selected, setSelected] = useState<Facility | null>(null);
   const [desertTip, setDesertTip] = useState<{ zone: DesertZone; x: number; y: number } | null>(null);
   const [flyTo, setFlyTo] = useState<{ lat: number; lng: number; zoom?: number } | null>(null);
-
-  // Run agent animation when a query is submitted
-  useEffect(() => {
-    if (!submittedQuery) return;
-    setStepsDone(false);
-    setStepsCollapsed(false);
-    setActiveStep(0);
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    agentSteps.forEach((_, i) => {
-      timers.push(
-        setTimeout(() => setActiveStep(i + 1), (i + 1) * 450),
-      );
-    });
-    timers.push(
-      setTimeout(() => {
-        setStepsDone(true);
-        setStepsCollapsed(true);
-      }, agentSteps.length * 450 + 600),
-    );
-    return () => timers.forEach(clearTimeout);
-  }, [submittedQuery]);
+  const [fitBounds, setFitBounds] = useState<Array<[number, number]> | null>(null);
 
   const results = useMemo(() => {
     if (!submittedQuery) return [];
     return [...facilities].sort((a, b) => b.trust_score - a.trust_score);
   }, [submittedQuery]);
+
+  // Run agent animation when a query is submitted
+  useEffect(() => {
+    if (!submittedQuery) return;
+    setStepsDone(false);
+    setActiveStep(0);
+    setExpandedStep(null);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    chainOfThoughtSteps.forEach((_, i) => {
+      timers.push(
+        setTimeout(() => setActiveStep(i + 1), (i + 1) * 400),
+      );
+    });
+    timers.push(
+      setTimeout(() => {
+        setStepsDone(true);
+        // Fit bounds to all results
+        const coords = results.map((f) => [f.lat, f.lng] as [number, number]);
+        if (coords.length) setFitBounds(coords);
+      }, chainOfThoughtSteps.length * 400 + 300),
+    );
+    return () => timers.forEach(clearTimeout);
+  }, [submittedQuery, results]);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -100,6 +99,16 @@ const Search = () => {
     setFlyTo({ lat: f.lat, lng: f.lng, zoom: 9 });
   };
 
+  // Close drawer on Escape
+  useEffect(() => {
+    if (!selected) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelected(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selected]);
+
   // Close desert tooltip on outside click
   const tipRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -113,32 +122,32 @@ const Search = () => {
     return () => document.removeEventListener("mousedown", onDown);
   }, [desertTip]);
 
-  const showResults = submittedQuery && !selected;
-  const showEmpty = !submittedQuery && !selected;
+  const showResults = !!submittedQuery;
+  const showEmpty = !submittedQuery;
+  const resultIds = useMemo(() => results.map((r) => r.id), [results]);
 
   return (
     <div className="fixed inset-0 bg-background overflow-hidden">
       <Nav variant="app" />
 
       {/* Map fills viewport below nav */}
-      <div
-        className="absolute left-0 right-0 top-12"
-        style={{ bottom: 0 }}
-      >
+      <div className="absolute left-0 right-0 top-12 bottom-0">
         <SearchMap
           mode={mode}
           selectedId={selected?.id ?? null}
+          resultIds={resultIds}
           onSelectFacility={pickFacility}
           onSelectDesert={(z, pos) => setDesertTip({ zone: z, x: pos.x, y: pos.y })}
           flyTo={flyTo}
+          fitBounds={fitBounds}
         />
       </div>
 
-      {/* View toggle (top-right desktop, top-left mobile) */}
+      {/* View toggle */}
       <div
         className={cn(
           "absolute z-40 bg-background/90 backdrop-blur-sm border border-border-subtle rounded-lg p-1 flex gap-0.5",
-          isMobile ? "top-16 left-4" : "top-16 right-4",
+          isMobile ? "top-16 left-3" : "top-16 right-4",
         )}
       >
         {(["facilities", "deserts"] as const).map((m) => (
@@ -163,195 +172,207 @@ const Search = () => {
 
       {/* Legend (deserts only) */}
       {mode === "deserts" && (
-        <div className="absolute bottom-6 right-4 z-40 bg-background/90 backdrop-blur-sm border border-border-subtle rounded-lg px-3 py-2 fade-up">
+        <div
+          className={cn(
+            "absolute z-40 bg-background/90 backdrop-blur-sm border border-border-subtle rounded-lg px-3 py-2 fade-up",
+            isMobile ? "right-3 bottom-[57vh]" : "right-4 bottom-6",
+          )}
+        >
           <div
-            className="w-32 h-2 rounded-full"
+            className="w-32 h-1.5 rounded-full"
             style={{
               background:
                 "linear-gradient(to right, hsl(0 74% 50%), hsl(21 90% 54%), hsl(48 96% 53%), hsl(142 71% 45%))",
             }}
           />
-          <div className="flex items-center justify-between mt-1.5">
+          <div className="flex items-center justify-between mt-1">
             <span className="text-xs text-muted-foreground/70">Critical</span>
             <span className="text-xs text-muted-foreground/70">Adequate</span>
           </div>
         </div>
       )}
 
-      {/* Floating Search Card / Detail Card */}
-      <aside
-        className={cn(
-          "absolute z-40 bg-background/95 backdrop-blur-md border border-border-subtle shadow-2xl overflow-y-auto scrollbar-hidden",
-          isMobile
-            ? "left-0 right-0 bottom-0 rounded-t-xl border-b-0 max-h-[55vh]"
-            : "top-16 left-4 rounded-xl w-[340px] md:w-[300px] lg:w-[340px]",
-        )}
-        style={!isMobile ? { maxHeight: "calc(100vh - 80px)" } : undefined}
-      >
-        {selected ? (
-          <FacilityDetail facility={selected} onBack={() => setSelected(null)} />
-        ) : (
-          <>
-            {/* Search input */}
-            <form onSubmit={submit} className="p-3 border-b border-border-subtle">
-              <div className="relative h-10 rounded-lg bg-panel border border-border-subtle flex items-center pl-3 pr-1 focus-within:border-primary/50 transition-colors">
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Ask anything..."
-                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
-                />
-                <button
-                  type="submit"
-                  className="h-8 w-8 rounded-md bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-opacity"
-                  aria-label="Search"
-                >
-                  <SearchIcon className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </form>
-
-            {/* Chips */}
-            <div className="px-3 py-2 border-b border-border-subtle flex gap-1.5 overflow-x-auto scrollbar-hidden">
-              {queryChips.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => runChip(c)}
-                  className="shrink-0 px-2 py-1 rounded-md bg-panel border border-border-subtle text-xs text-muted-foreground hover:border-border whitespace-nowrap transition-colors"
-                >
-                  {c}
-                </button>
-              ))}
+      {/* SEARCH CARD (left on desktop, bottom sheet on mobile) — hidden on tablet when drawer open */}
+      {!(isMobile && selected) && (
+        <aside
+          className={cn(
+            "absolute z-40 bg-background/95 backdrop-blur-md border border-border-subtle shadow-2xl overflow-y-auto scrollbar-hidden",
+            isMobile
+              ? "left-0 right-0 bottom-0 rounded-t-xl border-b-0 max-h-[50vh]"
+              : "top-16 left-4 rounded-xl w-[300px] lg:w-[340px]",
+          )}
+          style={!isMobile ? { maxHeight: "calc(100vh - 80px)" } : undefined}
+        >
+          {/* Search input */}
+          <form onSubmit={submit} className="p-3 border-b border-border-subtle">
+            <div className="relative h-10 rounded-lg bg-panel border border-border-subtle flex items-center pl-3 pr-1 focus-within:border-primary/50 transition-colors">
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Ask anything — e.g. 'Emergency obstetrics in rural Bihar'"
+                className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none min-w-0"
+              />
+              <button
+                type="submit"
+                className="h-8 w-8 rounded-md bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-opacity shrink-0"
+                aria-label="Search"
+              >
+                <SearchIcon className="h-3.5 w-3.5" />
+              </button>
             </div>
+          </form>
 
-            {/* Agent steps */}
-            {submittedQuery && (
-              <div className="px-3 py-3 border-b border-border-subtle">
-                {stepsCollapsed && stepsDone ? (
-                  <button
-                    onClick={() => setStepsCollapsed(false)}
-                    className="w-full flex items-center justify-between text-xs text-muted-foreground hover:text-foreground transition-colors"
+          {/* Chips */}
+          <div className="px-3 py-2 border-b border-border-subtle flex flex-wrap gap-1.5">
+            {queryChips.map((c) => (
+              <button
+                key={c}
+                onClick={() => runChip(c)}
+                className="px-2 py-1 rounded-md bg-panel border border-border-subtle text-xs text-muted-foreground hover:border-primary/40 transition-colors"
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+
+          {/* Reasoning steps */}
+          {submittedQuery && (
+            <div className="px-3 py-3 border-b border-border-subtle space-y-1.5">
+              {chainOfThoughtSteps.map((step, i) => {
+                const done = i < activeStep || stepsDone;
+                const active = i === activeStep && !stepsDone;
+                const pending = !done && !active;
+                const isExpanded = expandedStep === i;
+                return (
+                  <div
+                    key={step.title}
+                    className="bg-panel border border-border-subtle rounded-lg fade-up"
+                    style={{ animationDelay: `${i * 80}ms` }}
                   >
-                    <span className="flex items-center gap-1.5">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-trust-high" />
-                      {results.length} results found
-                    </span>
-                    <ChevronDown className="h-3 w-3" />
-                  </button>
-                ) : (
-                  <>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs uppercase tracking-wide text-muted-foreground">
-                        Agent
+                    <button
+                      onClick={() => setExpandedStep(isExpanded ? null : i)}
+                      className="w-full px-3 py-2 flex items-center gap-2 hover:bg-panel-elevated/50 transition-colors rounded-lg"
+                    >
+                      <span
+                        className={cn(
+                          "h-5 w-5 rounded-full flex items-center justify-center text-xs font-mono shrink-0",
+                          done && "bg-trust-high/20 text-trust-high",
+                          active && "bg-primary/20 text-primary animate-pulse",
+                          pending && "bg-panel-elevated text-muted-foreground",
+                        )}
+                      >
+                        {done ? "✓" : i + 1}
                       </span>
-                      {stepsDone && (
-                        <button
-                          onClick={() => setStepsCollapsed(true)}
-                          className="text-muted-foreground hover:text-foreground"
-                          aria-label="Collapse"
-                        >
-                          <ChevronUp className="h-3 w-3" />
-                        </button>
-                      )}
-                    </div>
-                    <ol className="relative">
-                      <span className="absolute left-[3px] top-1.5 bottom-1.5 w-px bg-border-subtle" />
-                      {agentSteps.map((s, i) => {
-                        const done = i < activeStep;
-                        const active = i === activeStep && !stepsDone;
-                        return (
-                          <li key={s} className="flex items-center gap-2 py-1 relative">
-                            <span
-                              className={cn(
-                                "h-1.5 w-1.5 rounded-full shrink-0 z-10",
-                                done
-                                  ? "bg-trust-high"
-                                  : active
-                                    ? "bg-primary animate-pulse"
-                                    : "bg-panel-elevated",
-                              )}
-                            />
-                            <span
-                              className={cn(
-                                "text-xs",
-                                done || active
-                                  ? "text-foreground"
-                                  : "text-muted-foreground",
-                              )}
-                            >
-                              {s}
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ol>
-                    {stepsDone && (
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        {results.length} results
+                      <span className="text-xs text-muted-foreground font-medium flex-1 text-left">
+                        {step.title}
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          "h-3 w-3 text-muted-foreground transition-transform",
+                          isExpanded && "rotate-180",
+                        )}
+                      />
+                    </button>
+                    {isExpanded && (
+                      <p className="px-3 pb-2 text-xs text-muted-foreground/80 leading-relaxed">
+                        {step.detail}
                       </p>
                     )}
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* Results */}
-            <div className="px-2 py-2">
-              {showEmpty ? (
-                <p className="text-xs text-muted-foreground/70 text-center py-8">
-                  Search or pick a query above
-                </p>
-              ) : (
-                showResults &&
-                results.map((f) => {
-                  const flag = f.red_flags[0];
-                  return (
-                    <button
-                      key={f.id}
-                      onClick={() => pickFacility(f)}
-                      className="w-full text-left bg-panel/80 border border-border-subtle rounded-lg p-3 mb-1.5 hover:bg-panel-elevated/80 transition-colors"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm text-foreground font-medium line-clamp-1">
-                          {f.name}
-                        </span>
-                        <span
-                          className={cn(
-                            "text-xs font-bold rounded-md px-1.5 py-0.5 shrink-0",
-                            trustBadgeClass(f.trust_score),
-                          )}
-                        >
-                          {f.trust_score}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between gap-2 mt-1">
-                        <span className="text-xs text-muted-foreground line-clamp-1">
-                          {f.district}, {f.state}
-                        </span>
-                        <span className="text-xs text-muted-foreground/60 shrink-0">
-                          {f.facility_type}
-                        </span>
-                      </div>
-                      {flag && (
-                        <p className="mt-1 text-xs text-trust-low/80 line-clamp-1">⚠ {flag}</p>
-                      )}
-                    </button>
-                  );
-                })
-              )}
+                  </div>
+                );
+              })}
             </div>
-          </>
-        )}
-      </aside>
+          )}
+
+          {/* Results */}
+          <div className="px-2 py-2">
+            {showEmpty ? (
+              <div className="flex flex-col items-center py-8 gap-2">
+                <SearchIcon className="h-4 w-4 text-muted-foreground/60" />
+                <p className="text-xs text-muted-foreground/70 text-center">
+                  Ask a question or pick an example
+                </p>
+              </div>
+            ) : (
+              showResults && (
+                <>
+                  <div className="flex items-center gap-2 px-1.5 py-1.5">
+                    <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                      Results
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded-md bg-panel-elevated text-xs text-foreground">
+                      {results.length}
+                    </span>
+                  </div>
+                  {results.map((f) => {
+                    const flag = f.red_flags[0];
+                    return (
+                      <button
+                        key={f.id}
+                        onClick={() => pickFacility(f)}
+                        className={cn(
+                          "w-full text-left bg-panel border border-border-subtle rounded-lg p-3 mb-1.5 hover:bg-panel-elevated/80 transition-colors ring-1 ring-foreground/5",
+                          selected?.id === f.id && "border-primary/50",
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm text-foreground font-medium line-clamp-1">
+                            {f.name}
+                          </span>
+                          <span
+                            className={cn(
+                              "text-xs font-bold rounded-md px-1.5 py-0.5 shrink-0",
+                              trustBadgeClass(f.trust_score),
+                            )}
+                          >
+                            {f.trust_score}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
+                          <span className="line-clamp-1">{f.district}, {f.state}</span>
+                          <span className="text-muted-foreground/40">·</span>
+                          <span className="text-muted-foreground/70 shrink-0">{f.facility_type}</span>
+                        </div>
+                        {flag && (
+                          <p className="mt-1 flex items-center gap-1 text-xs text-trust-low/80 line-clamp-1">
+                            <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
+                            {flag}
+                          </p>
+                        )}
+                      </button>
+                    );
+                  })}
+                </>
+              )
+            )}
+          </div>
+        </aside>
+      )}
+
+      {/* RIGHT DRAWER (desktop) / BOTTOM SHEET (mobile) */}
+      {selected && (
+        <aside
+          className={cn(
+            "fixed z-40 bg-background border-border-subtle overflow-y-auto scrollbar-thin",
+            isMobile
+              ? "left-0 right-0 bottom-0 max-h-[70vh] rounded-t-xl border-t slide-in-bottom"
+              : "right-0 top-12 bottom-0 w-[400px] md:w-[360px] lg:w-[400px] border-l slide-in-right",
+          )}
+        >
+          <div className="relative">
+            <FacilityDetail facility={selected} onClose={() => setSelected(null)} />
+          </div>
+        </aside>
+      )}
 
       {/* Desert tooltip */}
       {desertTip && (
         <div
           ref={tipRef}
-          className="fixed z-50 w-56 bg-background/95 border border-border-subtle rounded-lg p-3 shadow-xl fade-up"
+          className="fixed z-50 w-60 bg-background/95 border border-border-subtle rounded-lg p-3 shadow-xl fade-up"
           style={{
-            left: Math.min(desertTip.x + 12, window.innerWidth - 240),
-            top: Math.min(desertTip.y + 12, window.innerHeight - 140),
+            left: Math.min(desertTip.x + 12, window.innerWidth - 248),
+            top: Math.min(desertTip.y + 12, window.innerHeight - 180),
           }}
         >
           <button
@@ -361,13 +382,16 @@ const Search = () => {
           >
             <X className="h-3 w-3" />
           </button>
-          <p className="text-sm text-foreground font-medium pr-4">
-            {desertTip.zone.district},{" "}
-            <span className="text-muted-foreground">{desertTip.zone.state}</span>
+          <p className="text-sm text-foreground font-semibold pr-4">
+            {desertTip.zone.district}{" "}
+            <span className="text-muted-foreground font-normal">{desertTip.zone.state}</span>
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            {desertTip.zone.population} people · {desertTip.zone.verified} facilities
+            {desertTip.zone.population} people · {desertTip.zone.verified} verified facilities
           </p>
+          {desertTip.zone.top_gap !== "None" && (
+            <p className="mt-1 text-xs text-trust-low">Top gap: {desertTip.zone.top_gap}</p>
+          )}
           <div className="mt-1.5 flex items-center gap-1.5">
             <span
               className={cn(
@@ -395,6 +419,9 @@ const Search = () => {
           </button>
         </div>
       )}
+
+      {/* Reference to navigate (silence unused warning) */}
+      <span className="hidden">{navigate.length}</span>
     </div>
   );
 };
