@@ -114,7 +114,12 @@ const DoctorReferral = () => {
     e.preventDefault();
     const q = query.trim();
     if (!q) {
-      toast("Please enter a search query");
+      // Empty search clears any prior ranked results
+      setSubmitted(null);
+      setResults([]);
+      setSelected(null);
+      setSelectedDetail(null);
+      setSearchError(null);
       return;
     }
     setSubmitted(q);
