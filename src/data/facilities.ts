@@ -31,6 +31,7 @@ export interface Facility {
   lat: number;
   lng: number;
   claims: Claim[];
+  red_flags: string[];
   web_verification: WebVerification;
 }
 
@@ -53,6 +54,7 @@ export const facilities: Facility[] = [
       { claim: "24/7 emergency availability", source_field: "availability", source_text: "24/7 Emergency Services", status: "confirmed" },
       { claim: "Night-time anesthesia coverage", source_field: "raw_notes", source_text: "Anesthesiologist visits Mon/Wed/Fri", status: "contradicted" },
     ],
+    red_flags: ["Part-time anesthesiologist limits night coverage"],
     web_verification: { status: "confirmed", source: "nashik.gov.in" },
   },
   {
@@ -72,6 +74,7 @@ export const facilities: Facility[] = [
       { claim: "Surgical capability", source_field: "equipment", source_text: "Basic OT available", status: "confirmed" },
       { claim: "Multi-specialty facility", source_field: "name", source_text: "Only 2 doctors for 5 claimed specialties", status: "contradicted" },
     ],
+    red_flags: ["2 doctors for 5 specialties"],
     web_verification: { status: "found", source: "justdial.com" },
   },
   {
@@ -91,6 +94,7 @@ export const facilities: Facility[] = [
       { claim: "Minor surgery capability", source_field: "services", source_text: "No surgical staff or equipment", status: "contradicted" },
       { claim: "Dental services", source_field: "equipment", source_text: "Dental Chair, Dental X-Ray", status: "confirmed" },
     ],
+    red_flags: ["Dental clinic claims family medicine", "Claims surgery with no surgical staff"],
     web_verification: { status: "not_found", source: null },
   },
   {
@@ -111,6 +115,7 @@ export const facilities: Facility[] = [
       { claim: "Emergency C-section capability", source_field: "services", source_text: "C-Section in services, OB-GYN staff present", status: "confirmed" },
       { claim: "Oncology services", source_field: "services", source_text: "Oncology listed with supporting staff", status: "confirmed" },
     ],
+    red_flags: [],
     web_verification: { status: "confirmed", source: "gmcaurangabad.edu.in" },
   },
   {
@@ -130,6 +135,7 @@ export const facilities: Facility[] = [
       { claim: "24/7 availability", source_field: "availability", source_text: "Single doctor posted — likely not continuous", status: "inferred" },
       { claim: "Maternal health services", source_field: "services", source_text: "Maternal Health listed", status: "confirmed" },
     ],
+    red_flags: ["Single doctor for 24/7 claim"],
     web_verification: { status: "not_found", source: null },
   },
   {
@@ -149,6 +155,7 @@ export const facilities: Facility[] = [
       { claim: "Full surgical capability", source_field: "equipment", source_text: "Modular OT x4", status: "confirmed" },
       { claim: "24/7 emergency services", source_field: "staff", source_text: "4 Anesthesiologists on staff", status: "confirmed" },
     ],
+    red_flags: [],
     web_verification: { status: "confirmed", source: "apollospectra.com" },
   },
 ];
