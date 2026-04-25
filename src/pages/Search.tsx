@@ -35,6 +35,7 @@ const Search = () => {
   const [submittedQuery, setSubmittedQuery] = useState<string | null>(initialQ || null);
   const [selected, setSelected] = useState<Facility | null>(null);
   const [showMap, setShowMap] = useState(true);
+  const [agentStepsOpen, setAgentStepsOpen] = useState(false);
 
   const [pins, setPins] = useState<Facility[]>([]);
   const [results, setResults] = useState<Facility[]>([]);
