@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { Search as SearchIcon, AlertTriangle, MapPin, X, ArrowLeft, ShieldAlert, Sparkles, Loader2, ChevronDown } from "lucide-react";
+import { Search as SearchIcon, AlertTriangle, MapPin, X, ArrowLeft, Sparkles, Loader2, ChevronDown } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { SearchMap } from "@/components/SearchMap";
 import { FacilityDetail } from "@/components/FacilityDetail";
 import { Disclaimer } from "@/components/Disclaimer";
 import { type Facility, facilities as fallbackFacilities, trustTier } from "@/data/facilities";
 import { useRole, dashboardPathFor } from "@/context/RoleContext";
-import { SAFETY_NOTE } from "@/data/roleData";
+
 import {
   type QueryResponseApi,
   facilityFromPin,
@@ -188,12 +188,6 @@ const Search = () => {
           </div>
         </form>
 
-
-        {/* Safety note */}
-        <div className="mt-4 rounded-lg border border-border-subtle bg-panel/60 px-3.5 py-2.5 flex items-start gap-2">
-          <ShieldAlert className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
-          <p className="text-xs text-muted-foreground leading-relaxed">{SAFETY_NOTE}</p>
-        </div>
 
         {searchError && (
           <div className="mt-3 rounded-lg border border-trust-low/30 bg-trust-low/5 px-3.5 py-2 text-xs text-trust-low">

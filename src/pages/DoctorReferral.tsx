@@ -172,11 +172,7 @@ const DoctorReferral = () => {
           </div>
         </div>
 
-        {/* Safety note */}
-        <div className="fade-up mb-5 rounded-lg border border-border-subtle bg-panel/60 px-3.5 py-2.5 flex items-start gap-2">
-          <ShieldAlert className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
-          <p className="text-xs text-muted-foreground leading-relaxed">{SAFETY_NOTE}</p>
-        </div>
+
 
         {/* Clinical search */}
         <form onSubmit={submit} className="fade-up">
