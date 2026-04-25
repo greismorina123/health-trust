@@ -73,9 +73,6 @@ const Landing = () => {
             <span className="text-primary text-xs font-medium tracking-widest uppercase">
               How it works
             </span>
-            <h2 className="mt-3 text-2xl sm:text-3xl font-medium text-foreground">
-              A clearer way to choose care.
-            </h2>
           </div>
 
           <div className="divide-y divide-border-subtle border-y border-border-subtle">
