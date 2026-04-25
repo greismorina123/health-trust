@@ -191,7 +191,7 @@ const Search = () => {
               <div className="flex items-center gap-2 mb-2 px-1">
                 <span className="text-xs uppercase tracking-wide text-muted-foreground">Results</span>
                 <span className="px-1.5 py-0.5 rounded-md bg-panel-elevated text-xs text-foreground">
-                  {isSearching ? "…" : filteredResults.length}
+                  {isSearching ? "…" : results.length}
                 </span>
                 {ci && (
                   <span className="ml-auto text-[11px] text-muted-foreground">
@@ -200,21 +200,19 @@ const Search = () => {
                 )}
               </div>
               <div className="space-y-2">
-                {isSearching && filteredResults.length === 0 && (
+                {isSearching && results.length === 0 && (
                   <div className="rounded-xl border border-border-subtle bg-panel p-6 text-center text-xs text-muted-foreground">
                     Searching…
                   </div>
                 )}
-                {!isSearching && filteredResults.length === 0 && (
+                {!isSearching && results.length === 0 && (
                   <div className="rounded-xl border border-border-subtle bg-panel p-6 text-center text-xs text-muted-foreground">
                     No facilities matched your query.
                   </div>
                 )}
-                {filteredResults.map((f) => {
+                {results.map((f) => {
                   const flag = f.red_flags[0];
                   const isSelected = selected?.id === f.id;
-                  const highlightRisky =
-                    submittedFilters.trust === "risky" && f.red_flags.length > 0;
                   return (
                     <button
                       key={f.id}
