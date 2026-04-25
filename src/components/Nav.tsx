@@ -44,9 +44,6 @@ export const Nav = ({ variant = "app" }: Props) => {
           </div>
         ) : (
           <div className="flex items-center gap-3">
-            <button className="text-xs text-muted-foreground hover:text-foreground transition-colors hidden sm:inline">
-              How it works
-            </button>
             <ThemeToggle />
             <Link
               to="/signup"
