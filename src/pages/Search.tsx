@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Search as SearchIcon, AlertTriangle, MapPin, X, ArrowLeft, Loader2 } from "lucide-react";
 import { Nav } from "@/components/Nav";
@@ -7,6 +7,27 @@ import { FacilityDetail } from "@/components/FacilityDetail";
 import { Disclaimer } from "@/components/Disclaimer";
 import { type Facility, facilities as fallbackFacilities, trustTier } from "@/data/facilities";
 import { useRole, dashboardPathFor } from "@/context/RoleContext";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  CARE_OPTIONS,
+  LOCATION_OPTIONS,
+  TRUST_OPTIONS,
+  applyTrustFilter,
+  buildCombinedQuery,
+  defaultFilters,
+  filtersFromParams,
+  filtersToParams,
+  type CareKey,
+  type FilterState,
+  type LocationKey,
+  type TrustKey,
+} from "@/lib/searchFilters";
 
 import {
   type QueryResponseApi,
@@ -33,8 +54,11 @@ const Search = () => {
   const navigate = useNavigate();
 
   const initialQ = params.get("q") ?? "";
+  const initialFilters = filtersFromParams(params);
   const [query, setQuery] = useState(initialQ);
+  const [filters, setFilters] = useState<FilterState>(initialFilters);
   const [submittedQuery, setSubmittedQuery] = useState<string | null>(initialQ || null);
+  const [submittedFilters, setSubmittedFilters] = useState<FilterState>(initialFilters);
   const [selected, setSelected] = useState<Facility | null>(null);
   const [showMap, setShowMap] = useState(true);
 
@@ -62,19 +86,20 @@ const Search = () => {
   }, []);
 
   // Run a query against the API
-  const runSearch = async (q: string) => {
+  const runSearch = async (text: string, f: FilterState) => {
+    const combined = buildCombinedQuery(text, f);
     setIsSearching(true);
     setSearchError(null);
     try {
-      const resp = await searchFacilities(q);
+      const resp = await searchFacilities(combined || text);
       setQueryResponse(resp);
       // Filter out non-facility entries (e.g. district/desert results) which lack coords/id
       const mapped = resp.results
         .filter((r: any) => r && r.facility_id && Number.isFinite(r.latitude) && Number.isFinite(r.longitude))
         .map(facilityFromSearchResult);
       setResults(mapped);
-      // Auto-open the highest-ranked facility in the drawer
-      const top = mapped[0];
+      // Auto-open the highest-ranked facility (after trust filtering) in the drawer
+      const top = applyTrustFilter(mapped, f.trust)[0];
       if (top) await openFacility(top);
     } catch {
       setSearchError("Search failed. Showing fallback data.");
@@ -86,11 +111,11 @@ const Search = () => {
     }
   };
 
-  // Re-run query when ?q= appears (e.g. on first load)
+  // Re-run query when ?q= or filters change (e.g. on first load)
   useEffect(() => {
-    if (submittedQuery) void runSearch(submittedQuery);
+    if (submittedQuery) void runSearch(submittedQuery, submittedFilters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [submittedQuery]);
+  }, [submittedQuery, submittedFilters]);
 
   useEffect(() => {
     if (!selected) return;
@@ -101,7 +126,14 @@ const Search = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, [selected]);
 
-  
+  const commitSearch = (text: string, f: FilterState) => {
+    const sp = new URLSearchParams();
+    if (text) sp.set("q", text);
+    for (const [k, v] of Object.entries(filtersToParams(f))) sp.set(k, v);
+    setParams(sp);
+    setSubmittedQuery(text);
+    setSubmittedFilters(f);
+  };
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -110,14 +142,22 @@ const Search = () => {
       toast("Please enter a search query");
       return;
     }
-    setParams({ q });
-    setSubmittedQuery(q);
+    commitSearch(q, filters);
   };
 
   const runChip = (text: string) => {
     setQuery(text);
-    setParams({ q: text });
-    setSubmittedQuery(text);
+    commitSearch(text, filters);
+  };
+
+  const updateFilter = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
+    const next = { ...filters, [key]: value };
+    setFilters(next);
+    if (submittedQuery) commitSearch(submittedQuery, next);
+  };
+
+  const clearFilter = <K extends keyof FilterState>(key: K) => {
+    updateFilter(key, defaultFilters[key] as FilterState[K]);
   };
 
   const openFacility = async (f: Facility) => {
@@ -137,11 +177,31 @@ const Search = () => {
 
   const ci = queryResponse?.confidence_interval;
 
+  // Apply trust-level filter on the frontend after API returns.
+  const filteredResults = useMemo(
+    () => applyTrustFilter(results, submittedFilters.trust),
+    [results, submittedFilters.trust],
+  );
+
   if (role !== "user") return <Navigate to={dashboardPathFor(role)} replace />;
 
   // Map source: results when searched, otherwise initial pins
-  const mapFacilities = submittedQuery && results.length ? results : pins;
-  const mapResultIds = submittedQuery ? results.map((r) => r.id) : [];
+  const mapFacilities = submittedQuery && filteredResults.length ? filteredResults : pins;
+  const mapResultIds = submittedQuery ? filteredResults.map((r) => r.id) : [];
+
+  const activeChips: { key: keyof FilterState; label: string }[] = [];
+  if (submittedFilters.location !== "any") {
+    const o = LOCATION_OPTIONS.find((x) => x.value === submittedFilters.location);
+    if (o) activeChips.push({ key: "location", label: o.label });
+  }
+  if (submittedFilters.care !== "any") {
+    const o = CARE_OPTIONS.find((x) => x.value === submittedFilters.care);
+    if (o) activeChips.push({ key: "care", label: o.label });
+  }
+  if (submittedFilters.trust !== "any") {
+    const o = TRUST_OPTIONS.find((x) => x.value === submittedFilters.trust);
+    if (o) activeChips.push({ key: "trust", label: o.label });
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -169,6 +229,72 @@ const Search = () => {
           </div>
         </form>
 
+        {/* Filters */}
+        <div className="mt-2 flex flex-wrap gap-2">
+          <Select
+            value={filters.location}
+            onValueChange={(v) => updateFilter("location", v as LocationKey)}
+          >
+            <SelectTrigger className="h-8 w-auto min-w-[130px] bg-panel border-border-subtle text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {LOCATION_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value} className="text-xs">
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filters.care}
+            onValueChange={(v) => updateFilter("care", v as CareKey)}
+          >
+            <SelectTrigger className="h-8 w-auto min-w-[130px] bg-panel border-border-subtle text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {CARE_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value} className="text-xs">
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filters.trust}
+            onValueChange={(v) => updateFilter("trust", v as TrustKey)}
+          >
+            <SelectTrigger className="h-8 w-auto min-w-[130px] bg-panel border-border-subtle text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TRUST_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value} className="text-xs">
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Active filter chips */}
+        {activeChips.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {activeChips.map((c) => (
+              <button
+                key={c.key}
+                onClick={() => clearFilter(c.key)}
+                className="inline-flex items-center gap-1 h-6 px-2 rounded-full bg-panel border border-border-subtle text-[11px] text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors"
+              >
+                {c.label}
+                <X className="h-2.5 w-2.5" />
+              </button>
+            ))}
+          </div>
+        )}
 
         {searchError && (
           <div className="mt-3 rounded-lg border border-trust-low/30 bg-trust-low/5 px-3.5 py-2 text-xs text-trust-low">
@@ -198,7 +324,7 @@ const Search = () => {
               <div className="flex items-center gap-2 mb-2 px-1">
                 <span className="text-xs uppercase tracking-wide text-muted-foreground">Results</span>
                 <span className="px-1.5 py-0.5 rounded-md bg-panel-elevated text-xs text-foreground">
-                  {isSearching ? "…" : results.length}
+                  {isSearching ? "…" : filteredResults.length}
                 </span>
                 {ci && (
                   <span className="ml-auto text-[11px] text-muted-foreground">
@@ -207,26 +333,32 @@ const Search = () => {
                 )}
               </div>
               <div className="space-y-2">
-                {isSearching && results.length === 0 && (
+                {isSearching && filteredResults.length === 0 && (
                   <div className="rounded-xl border border-border-subtle bg-panel p-6 text-center text-xs text-muted-foreground">
                     Searching…
                   </div>
                 )}
-                {!isSearching && results.length === 0 && (
+                {!isSearching && filteredResults.length === 0 && (
                   <div className="rounded-xl border border-border-subtle bg-panel p-6 text-center text-xs text-muted-foreground">
                     No facilities matched your query.
                   </div>
                 )}
-                {results.map((f) => {
+                {filteredResults.map((f) => {
                   const flag = f.red_flags[0];
                   const isSelected = selected?.id === f.id;
+                  const highlightRisky =
+                    submittedFilters.trust === "risky" && f.red_flags.length > 0;
                   return (
                     <button
                       key={f.id}
                       onClick={() => openFacility(f)}
                       className={cn(
                         "w-full text-left bg-panel border rounded-xl p-4 hover:bg-panel-elevated/60 transition-colors",
-                        isSelected ? "border-primary/60" : "border-border-subtle",
+                        isSelected
+                          ? "border-primary/60"
+                          : highlightRisky
+                            ? "border-trust-low/50"
+                            : "border-border-subtle",
                       )}
                     >
                       <div className="flex items-center justify-between gap-3">
