@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Search as SearchIcon, AlertTriangle, MapPin, ShieldAlert, ArrowLeft, ChevronDown, Stethoscope, Loader2 } from "lucide-react";
+import { Search as SearchIcon, AlertTriangle, MapPin, ShieldAlert, ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, Stethoscope, Loader2 } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { SearchMap } from "@/components/SearchMap";
 import { Disclaimer } from "@/components/Disclaimer";
@@ -71,6 +71,7 @@ const DoctorReferral = () => {
   );
   const [subScoresOpen, setSubScoresOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [riskMapCollapsed, setRiskMapCollapsed] = useState(false);
 
   // Load district risk regions from API
   useEffect(() => {
@@ -252,7 +253,7 @@ const DoctorReferral = () => {
 
         {/* Empty state */}
         {!submitted && (
-          <div className="mt-12 grid lg:grid-cols-[1fr_360px] gap-4">
+          <div className={cn("mt-12 grid gap-4", riskMapCollapsed ? "lg:grid-cols-[1fr_44px]" : "lg:grid-cols-[1fr_360px]")}>
             <div className="rounded-xl border border-border-subtle bg-panel p-8 flex flex-col items-center text-center">
               <SearchIcon className="h-6 w-6 text-muted-foreground/60" />
               <p className="mt-3 text-sm text-muted-foreground">
@@ -262,13 +263,22 @@ const DoctorReferral = () => {
                 Each result shows verified capabilities, contradictions, and recommended follow-up.
               </p>
             </div>
-            <ReferralRiskMap regions={referralRegions} region={region} setRegion={setRegion} />
+            {riskMapCollapsed ? (
+              <CollapsedRiskRail onExpand={() => setRiskMapCollapsed(false)} />
+            ) : (
+              <ReferralRiskMap
+                regions={referralRegions}
+                region={region}
+                setRegion={setRegion}
+                onCollapse={() => setRiskMapCollapsed(true)}
+              />
+            )}
           </div>
         )}
 
         {/* Results */}
         {submitted && (
-          <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_360px]">
+          <div className={cn("mt-6 grid gap-4", riskMapCollapsed ? "lg:grid-cols-[1fr_44px]" : "lg:grid-cols-[1fr_360px]")}>
             <section className="space-y-2">
               <div className="flex items-center gap-2 mb-1 px-1">
                 <span className="text-xs uppercase tracking-wide text-muted-foreground">Ranked results</span>
@@ -346,7 +356,16 @@ const DoctorReferral = () => {
               })}
             </section>
 
-            <ReferralRiskMap regions={referralRegions} region={region} setRegion={setRegion} />
+            {riskMapCollapsed ? (
+              <CollapsedRiskRail onExpand={() => setRiskMapCollapsed(false)} />
+            ) : (
+              <ReferralRiskMap
+                regions={referralRegions}
+                region={region}
+                setRegion={setRegion}
+                onCollapse={() => setRiskMapCollapsed(true)}
+              />
+            )}
           </div>
         )}
 
@@ -639,20 +658,50 @@ const FacilityVerificationPanel = ({ facility, detail, isLoadingDetail, subScore
 // Referral Risk Map (right rail)
 // =============================================================================
 
+const CollapsedRiskRail = ({ onExpand }: { onExpand: () => void }) => (
+  <button
+    type="button"
+    onClick={onExpand}
+    aria-label="Expand referral risk map"
+    className="rounded-xl border border-border-subtle bg-panel hover:bg-panel-elevated/60 transition-colors flex flex-col items-center justify-start gap-2 py-3 w-[44px]"
+  >
+    <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground" />
+    <ShieldAlert className="h-4 w-4 text-trust-low" />
+    <span
+      className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mt-1"
+      style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+    >
+      Risk Map
+    </span>
+  </button>
+);
+
 const ReferralRiskMap = ({
   regions,
   region,
   setRegion,
+  onCollapse,
 }: {
   regions: DesertRegion[];
   region: DesertRegion;
   setRegion: (r: DesertRegion) => void;
+  onCollapse?: () => void;
 }) => {
   return (
     <aside className="rounded-xl border border-border-subtle bg-panel overflow-hidden">
       <div className="px-4 py-3 border-b border-border-subtle flex items-center gap-2">
         <ShieldAlert className="h-3.5 w-3.5 text-trust-low" />
         <span className="text-xs font-medium text-foreground">Referral Risk Map</span>
+        {onCollapse && (
+          <button
+            type="button"
+            onClick={onCollapse}
+            aria-label="Collapse referral risk map"
+            className="ml-auto h-6 w-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-panel-elevated transition-colors"
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
 
       <div className="p-3 border-b border-border-subtle space-y-1">
