@@ -284,13 +284,25 @@ const Td = ({ children, className, style, title }: { children: React.ReactNode; 
   </td>
 );
 
-const RegionDetail = ({ region }: { region: DesertRegion }) => (
+const RegionDetail = ({ region, onCollapse }: { region: DesertRegion; onCollapse?: () => void }) => (
   <aside className="rounded-xl border border-border-subtle bg-panel overflow-hidden flex flex-col">
-    <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between">
+    <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between gap-2">
       <span className="text-xs uppercase tracking-wider text-muted-foreground">Selected region</span>
-      <span className={cn("text-[11px] font-medium rounded-md px-1.5 py-0.5 border", riskBadge(region.riskLevel))}>
-        Risk {region.riskScore}
-      </span>
+      <div className="flex items-center gap-2">
+        <span className={cn("text-[11px] font-medium rounded-md px-1.5 py-0.5 border", riskBadge(region.riskLevel))}>
+          Risk {region.riskScore}
+        </span>
+        {onCollapse && (
+          <button
+            type="button"
+            onClick={onCollapse}
+            aria-label="Collapse selected region panel"
+            className="h-6 w-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-panel-elevated transition-colors"
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
     </div>
     <div className="p-4 space-y-4">
       <div>
