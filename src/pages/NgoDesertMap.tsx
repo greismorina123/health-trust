@@ -81,7 +81,7 @@ const NgoDesertMap = () => {
     <div className="min-h-screen bg-background">
       <Nav variant="app" />
 
-      <main className="pt-16 pb-16 px-4 sm:px-6 max-w-[1400px] mx-auto">
+      <main className="pt-16 pb-32 px-4 sm:px-6 max-w-[1400px] mx-auto">
         <div className="fade-up flex items-start justify-between gap-4 mb-5">
           <div>
             <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
