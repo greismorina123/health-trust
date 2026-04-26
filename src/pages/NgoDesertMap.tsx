@@ -1,13 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Building2,
-  Filter,
-  AlertTriangle,
-  Users,
-  Activity,
-  MapPin,
-  Loader2,
-} from "lucide-react";
+import { Filter, MapPin, Loader2 } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { DesertMap } from "@/components/DesertMap";
 import { Disclaimer } from "@/components/Disclaimer";
