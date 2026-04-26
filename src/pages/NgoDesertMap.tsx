@@ -123,58 +123,34 @@ const NgoDesertMap = () => {
       <Nav variant="app" />
 
       <main className="pt-16 pb-32 px-4 sm:px-6 max-w-[1400px] mx-auto">
-        {/* Header */}
-        <div className="fade-up mb-5">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-            <Building2 className="h-3.5 w-3.5" />
-            NGO Desert Map
-          </div>
-          <h1 className="mt-1 text-xl font-semibold text-foreground">
-            Where is the biggest healthcare access problem?
-          </h1>
+        {/* Filter bar — only the working filter sits above the map */}
+        <section className="fade-up mb-4">
           {usingFallback && (
-            <p className="mt-2 text-xs text-trust-mid">
+            <p className="mb-2 text-xs text-trust-mid">
               Backend unavailable — showing cached fallback data.
             </p>
           )}
-        </div>
-
-        {/* Top: filter + 3 summary cards in a single bar */}
-        <section className="fade-up grid gap-3 md:grid-cols-[minmax(220px,300px)_1fr] mb-4">
-          <div className="rounded-xl border border-border-subtle bg-panel p-3.5">
-            <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
+          <div className="rounded-xl border border-border-subtle bg-panel p-3.5 flex flex-col sm:flex-row sm:items-center gap-3">
+            <label
+              htmlFor="gap-filter"
+              className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground shrink-0"
+            >
               <Filter className="h-3 w-3" />
               View desert risk for
             </label>
             <select
+              id="gap-filter"
               value={gap}
               onChange={(e) => setGap(e.target.value)}
-              className="w-full h-10 px-3 rounded-lg bg-background border border-border-subtle text-sm text-foreground outline-none focus:border-primary/50"
+              className="w-full sm:max-w-xs h-10 px-3 rounded-lg bg-background border border-border-subtle text-sm text-foreground outline-none focus:border-primary/50"
             >
               {GAP_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}
             </select>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <SummaryCard
-              icon={<AlertTriangle className="h-4 w-4 text-trust-low" />}
-              label="Critical districts"
-              value={isLoading ? "—" : criticalCount.toLocaleString()}
-              hint="Score 0–30"
-            />
-            <SummaryCard
-              icon={<Users className="h-4 w-4 text-primary" />}
-              label="Population affected"
-              value={isLoading ? "—" : formatPop(populationAffected)}
-              hint={`${filtered.length} districts`}
-            />
-            <SummaryCard
-              icon={<Activity className="h-4 w-4 text-trust-mid" />}
-              label="Average desert score"
-              value={isLoading ? "—" : `${avgScore}`}
-              hint="Lower = worse"
-            />
+            <span className="sm:ml-auto text-[11px] text-muted-foreground">
+              {isLoading ? "Loading…" : `${filtered.length} districts shown`}
+            </span>
           </div>
         </section>
 
