@@ -78,16 +78,16 @@ export const DesertMap = ({ regions, selectedId, onSelect }: Props) => {
       center={INDIA_CENTER}
       zoom={5}
       minZoom={4}
-      maxZoom={10}
+      maxZoom={16}
       maxBounds={INDIA_BOUNDS}
       maxBoundsViscosity={1.0}
       zoomControl={true}
-      scrollWheelZoom={false}
-      doubleClickZoom={false}
-      touchZoom={false}
-      dragging={false}
-      boxZoom={false}
-      keyboard={false}
+      scrollWheelZoom={true}
+      doubleClickZoom={true}
+      touchZoom={true}
+      dragging={true}
+      boxZoom={true}
+      keyboard={true}
       style={{ width: "100%", height: "100%" }}
       ref={(m) => {
         mapRef.current = m;
