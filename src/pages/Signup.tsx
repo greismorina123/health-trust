@@ -4,11 +4,10 @@ import { Nav } from "@/components/Nav";
 import { cn } from "@/lib/utils";
 import { dashboardPathFor, useRole, type Role as AppRole } from "@/context/RoleContext";
 
-type Role = "patient" | "doctor" | "government";
+type Role = "patient" | "government";
 
 const roleToApp: Record<Role, AppRole> = {
   patient: "user",
-  doctor: "doctor",
   government: "ngo",
 };
 
@@ -17,7 +16,7 @@ const Signup = () => {
   const [params] = useSearchParams();
   const initialRole = (params.get("role") as Role) || "patient";
   const [role, setRole] = useState<Role>(
-    ["patient", "doctor", "government"].includes(initialRole) ? initialRole : "patient",
+    ["patient", "government"].includes(initialRole) ? initialRole : "patient",
   );
   const { setRole: setAppRole } = useRole();
   const [form, setForm] = useState({
