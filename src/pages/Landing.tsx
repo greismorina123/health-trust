@@ -5,10 +5,10 @@ import { Nav } from "@/components/Nav";
 import { Disclaimer } from "@/components/Disclaimer";
 
 const exampleChips = [
-  "I need a hospital with emergency and ICU near Delhi",
-  "Find a maternity hospital for normal delivery in Mumbai",
-  "Which areas in India have no cancer treatment available?",
-  "Are there any trustworthy 24/7 hospitals in Bangalore?",
+  "Emergency & ICU near Delhi",
+  "Maternity hospital in Mumbai",
+  "Cancer care gaps in India",
+  "24/7 hospitals in Bangalore",
 ];
 
 const Landing = () => {
