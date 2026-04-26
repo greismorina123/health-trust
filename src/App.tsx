@@ -10,7 +10,6 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Search from "./pages/Search";
 import FacilityPage from "./pages/FacilityPage";
-import DoctorReferral from "./pages/DoctorReferral";
 import NgoDesertMap from "./pages/NgoDesertMap";
 import NotFound from "./pages/NotFound";
 
@@ -27,7 +26,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/search" element={<Search />} />
-              <Route path="/doctor" element={<DoctorReferral />} />
+              
               <Route path="/ngo" element={<NgoDesertMap />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />

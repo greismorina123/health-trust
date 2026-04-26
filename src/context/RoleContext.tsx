@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-export type Role = "user" | "doctor" | "ngo";
+export type Role = "user" | "ngo";
 
 interface RoleContextValue {
   role: Role;
@@ -15,7 +15,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
   const [role, setRoleState] = useState<Role>(() => {
     if (typeof window === "undefined") return "user";
     const stored = window.localStorage.getItem(STORAGE_KEY) as Role | null;
-    return stored === "doctor" || stored === "ngo" || stored === "user" ? stored : "user";
+    return stored === "ngo" || stored === "user" ? stored : "user";
   });
 
   useEffect(() => {
@@ -33,8 +33,6 @@ export const useRole = () => {
   return ctx;
 };
 
-export const dashboardPathFor = (r: Role) =>
-  r === "doctor" ? "/doctor" : r === "ngo" ? "/ngo" : "/search";
+export const dashboardPathFor = (r: Role) => (r === "ngo" ? "/ngo" : "/search");
 
-export const roleLabel = (r: Role) =>
-  r === "doctor" ? "Doctor" : r === "ngo" ? "NGO" : "User";
+export const roleLabel = (r: Role) => (r === "ngo" ? "NGO" : "User");

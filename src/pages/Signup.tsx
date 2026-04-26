@@ -4,11 +4,10 @@ import { Nav } from "@/components/Nav";
 import { cn } from "@/lib/utils";
 import { dashboardPathFor, useRole, type Role as AppRole } from "@/context/RoleContext";
 
-type Role = "patient" | "doctor" | "government";
+type Role = "patient" | "government";
 
 const roleToApp: Record<Role, AppRole> = {
   patient: "user",
-  doctor: "doctor",
   government: "ngo",
 };
 
@@ -17,7 +16,7 @@ const Signup = () => {
   const [params] = useSearchParams();
   const initialRole = (params.get("role") as Role) || "patient";
   const [role, setRole] = useState<Role>(
-    ["patient", "doctor", "government"].includes(initialRole) ? initialRole : "patient",
+    ["patient", "government"].includes(initialRole) ? initialRole : "patient",
   );
   const { setRole: setAppRole } = useRole();
   const [form, setForm] = useState({
@@ -42,7 +41,6 @@ const Signup = () => {
 
   const roles: Array<{ key: Role; label: string }> = [
     { key: "patient", label: "Patient" },
-    { key: "doctor", label: "Doctor" },
     { key: "government", label: "Government / NGO" },
   ];
 
@@ -78,12 +76,6 @@ const Signup = () => {
             <Field label="Full Name" value={form.name} onChange={update("name")} placeholder="Aarav Sharma" />
             <Field label="Email" type="email" value={form.email} onChange={update("email")} placeholder="you@example.com" />
 
-            {role === "doctor" && (
-              <>
-                <Field label="Medical License Number" value={form.license} onChange={update("license")} placeholder="MCI-XXXXXX" />
-                <Field label="Hospital Affiliation" value={form.affiliation} onChange={update("affiliation")} placeholder="AIIMS Delhi" />
-              </>
-            )}
             {role === "government" && (
               <>
                 <Field label="Organization Name" value={form.org} onChange={update("org")} placeholder="Ministry of Health / NGO" />
