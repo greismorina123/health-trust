@@ -294,9 +294,6 @@ export const FacilityDetail = ({ facility, onClose, standalone }: Props) => {
                     </span>
                     <p className="text-sm text-foreground leading-snug">{c.claim}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1 ml-1">
-                    Source: {c.source_field}
-                  </p>
                   <p className="text-xs text-muted-foreground/85 leading-snug ml-1" title={c.source_text}>
                     {explainEvidence(c.source_text, c.status, c.claim, c.source_field)}
                   </p>
