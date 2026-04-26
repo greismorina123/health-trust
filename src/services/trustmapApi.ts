@@ -394,8 +394,10 @@ export const followUpForGaps = (gaps: string[]): string => {
   return Array.from(new Set(lines)).join(" ");
 };
 
+// Per current product spec: LOWER desert_score means worse coverage.
+//   0–30 → critical (high risk), 31–60 → underserved (medium), 61–100 → better (low).
 const desertScoreToLevel = (score: number): RiskLevel =>
-  score >= 70 ? "high" : score >= 50 ? "medium" : "low";
+  score <= 30 ? "high" : score <= 60 ? "medium" : "low";
 
 // Coarse district → coords lookup so the map can position circles.
 // API does not return geometry; this is a best-effort map for visible rendering.
