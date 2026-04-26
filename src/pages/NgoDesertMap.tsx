@@ -36,17 +36,28 @@ const NgoDesertMap = () => {
     let cancelled = false;
     (async () => {
       try {
+        console.info("[NgoDesertMap] fetching /districts …");
         const districts = await getDistricts();
         if (cancelled) return;
+        console.info("[NgoDesertMap] /districts returned", {
+          count: districts.length,
+          sample: districts[0],
+        });
         const mapped = districts
           .map(desertRegionFromDistrict)
           .sort((a, b) => b.riskScore - a.riskScore);
+        console.info("[NgoDesertMap] mapped regions", {
+          count: mapped.length,
+          sample: mapped[0],
+        });
         if (mapped.length > 0) {
           setDesertRegions(mapped);
           setSelectedId(mapped[0].id);
+        } else {
+          console.warn("[NgoDesertMap] No regions after mapping — keeping fallback.");
         }
-      } catch {
-        // keep fallback
+      } catch (err) {
+        console.error("[NgoDesertMap] Failed to load /districts — using fallback.", err);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
