@@ -14,17 +14,15 @@ const Login = () => {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const next: Role =
-      role === "doctor" ? "doctor" : role === "ngo" || role === "government" ? "ngo" : currentRole;
+      role === "ngo" || role === "government" ? "ngo" : currentRole;
     setRole(next);
     navigate(dashboardPathFor(next));
   };
 
   const roleLabel =
-    role === "doctor"
-      ? { label: "Doctor Dashboard", color: "text-trust-high" }
-      : role === "ngo" || role === "government"
-        ? { label: "NGO Dashboard", color: "text-trust-mid" }
-        : null;
+    role === "ngo" || role === "government"
+      ? { label: "NGO Dashboard", color: "text-trust-mid" }
+      : null;
 
   return (
     <div className="min-h-screen bg-background">
