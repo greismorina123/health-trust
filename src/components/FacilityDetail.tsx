@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AlertTriangle, ChevronDown, X } from "lucide-react";
 import {
   type Claim,
