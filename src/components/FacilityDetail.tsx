@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, ChevronDown, Globe, X } from "lucide-react";
+import { AlertTriangle, ChevronDown, X } from "lucide-react";
 import {
   type Claim,
   type ClaimStatus,
