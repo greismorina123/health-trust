@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Nav } from "@/components/Nav";
 import { dashboardPathFor, useRole, type Role } from "@/context/RoleContext";
 
