@@ -32,6 +32,84 @@ const claimBadge: Record<Claim["status"], { label: string; cls: string }> = {
 };
 
 /**
+ * Turn a raw evidence token (e.g. "familyMedicine") into a human label
+ * ("Family Medicine"). Handles camelCase, snake_case, and kebab-case.
+ */
+const humanizeToken = (raw: string): string => {
+  const cleaned = raw.trim().replace(/[_-]+/g, " ");
+  const spaced = cleaned.replace(/([a-z])([A-Z])/g, "$1 $2");
+  return spaced
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+};
+
+const joinList = (items: string[]): string => {
+  if (items.length === 0) return "";
+  if (items.length === 1) return items[0];
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+};
+
+/**
+ * Convert a raw evidence snippet + (capability, source field) into a 1–2
+ * sentence plain-English explanation that has meaning to a non-technical user.
+ *
+ * Example:
+ *   capability="primary_care", status="confirmed",
+ *   source_field="specialties", snippet="familyMedicine, internalMedicine"
+ * → "Listed specialties include Family Medicine and Internal Medicine, which
+ *    confirms primary care is offered here."
+ */
+const explainEvidence = (
+  snippet: string,
+  status: ClaimStatus,
+  capability?: string,
+  sourceField?: string,
+): string => {
+  const raw = (snippet ?? "").trim();
+  if (!raw) return "";
+
+  // Parse comma / pipe / bullet separated tokens.
+  const tokens = raw
+    .split(/[,;|•]/)
+    .map((t) => t.trim())
+    .filter(Boolean);
+  const looksLikeList =
+    tokens.length >= 2 && tokens.every((t) => /^[A-Za-z][A-Za-z0-9 _-]{0,40}$/.test(t));
+
+  const cap = capability ? humanizeToken(capability).toLowerCase() : "this capability";
+  const field = sourceField ? humanizeToken(sourceField).toLowerCase() : "the listed data";
+
+  if (looksLikeList) {
+    const items = joinList(tokens.map(humanizeToken));
+    switch (status) {
+      case "confirmed":
+        return `The ${field} include ${items}, which confirms ${cap} is offered here.`;
+      case "inferred":
+        return `The ${field} mention ${items}, suggesting ${cap} may be available — but it is not explicitly stated.`;
+      case "contradicted":
+        return `The ${field} list ${items}, which does not match the claim of ${cap} and indicates a contradiction.`;
+      default:
+        return `The ${field} list ${items}; coverage of ${cap} could not be confirmed.`;
+    }
+  }
+
+  // Free-text snippet — wrap it in a one-line interpretation.
+  switch (status) {
+    case "confirmed":
+      return `The source notes “${raw}”, confirming ${cap}.`;
+    case "inferred":
+      return `The source notes “${raw}”, which suggests ${cap} but does not state it directly.`;
+    case "contradicted":
+      return `The source notes “${raw}”, which contradicts the claim of ${cap}.`;
+    default:
+      return `The source notes “${raw}”; ${cap} could not be confirmed from the available data.`;
+  }
+};
+
+/**
  * Translate raw contradiction/red-flag text into a short, plain-English
  * "what this means for you" bullet. Returns up to 2 unique impact statements.
  */
