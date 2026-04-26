@@ -203,7 +203,9 @@ const NgoDesertMap = () => {
         <section className="mt-5 rounded-xl border border-border-subtle bg-panel overflow-hidden">
           <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between">
             <h2 className="text-sm font-medium text-foreground">Highest-risk areas</h2>
-            <span className="text-xs text-muted-foreground">{filtered.length} regions</span>
+            <span className="text-xs text-muted-foreground">
+              {isLoading ? "Loading…" : `${filtered.length} of ${desertRegions.length} regions`}
+            </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
@@ -241,13 +243,13 @@ const NgoDesertMap = () => {
                       <Td className="text-foreground">{r.areaName}</Td>
                       <Td className="text-muted-foreground">{r.state}</Td>
                       <Td className="text-foreground/90">{r.missingCapability}</Td>
-                      <Td className="text-foreground/90">{top?.name ?? "—"}</Td>
-                      <Td className="text-right text-muted-foreground">{top?.distanceKm ?? "—"} km</Td>
+                      <Td className="text-foreground/90">{top?.name ?? <span className="text-muted-foreground/60">n/a</span>}</Td>
+                      <Td className="text-right text-muted-foreground">{top ? `${top.distanceKm} km` : "—"}</Td>
                       <Td className="text-right" style={{ color: trustHsl(r.averageTrustScore) }}>
                         {r.averageTrustScore}
                       </Td>
                       <Td className="text-muted-foreground max-w-[260px] truncate" title={r.contradictionsFound[0]}>
-                        {r.contradictionsFound[0]}
+                        {r.contradictionsFound[0] ?? <span className="text-muted-foreground/60">No contradictions reported</span>}
                       </Td>
                       <Td className="text-muted-foreground max-w-[260px] truncate" title={r.recommendedFollowUp}>
                         {r.recommendedFollowUp}
@@ -318,33 +320,37 @@ const RegionDetail = ({ region, onCollapse }: { region: DesertRegion; onCollapse
         <p className="mt-1 text-xs text-foreground/85 leading-relaxed">{region.explanation}</p>
       </div>
 
-      <div>
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Nearest verified alternatives</p>
-        <ul className="mt-1.5 space-y-1.5">
-          {region.nearestVerifiedAlternatives.map((a, i) => (
-            <li key={a.name} className="flex items-center justify-between text-xs">
-              <span className="text-foreground/90">
-                <span className="text-muted-foreground">{i + 1}.</span> {a.name}
-              </span>
-              <span className="text-muted-foreground">
-                {a.distanceKm} km · <span style={{ color: trustHsl(a.trustScore) }}>{a.trustScore}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {region.nearestVerifiedAlternatives.length > 0 && (
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Nearest verified alternatives</p>
+          <ul className="mt-1.5 space-y-1.5">
+            {region.nearestVerifiedAlternatives.map((a, i) => (
+              <li key={a.name} className="flex items-center justify-between text-xs">
+                <span className="text-foreground/90">
+                  <span className="text-muted-foreground">{i + 1}.</span> {a.name}
+                </span>
+                <span className="text-muted-foreground">
+                  {a.distanceKm} km · <span style={{ color: trustHsl(a.trustScore) }}>{a.trustScore}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
-      <div>
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Contradictions found</p>
-        <ul className="mt-1.5 space-y-1">
-          {region.contradictionsFound.map((c, i) => (
-            <li key={i} className="text-xs text-muted-foreground flex gap-1.5">
-              <span className="text-trust-low">•</span>
-              <span>{c}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {region.contradictionsFound.length > 0 && (
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Contradictions found</p>
+          <ul className="mt-1.5 space-y-1">
+            {region.contradictionsFound.map((c, i) => (
+              <li key={i} className="text-xs text-muted-foreground flex gap-1.5">
+                <span className="text-trust-low">•</span>
+                <span>{c}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div>
         <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Recommended follow-up</p>
