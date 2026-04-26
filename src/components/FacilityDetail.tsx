@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, ChevronDown, Globe, X } from "lucide-react";
 import {
   type Claim,
+  type ClaimStatus,
   type Facility,
   trustHsl,
   trustTextClass,
