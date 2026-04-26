@@ -464,8 +464,7 @@ const Search = () => {
           </div>
         )}
 
-        <span className="hidden">{navigate.length}</span>
-        <Disclaimer />
+        
       </main>
     </div>
   );
