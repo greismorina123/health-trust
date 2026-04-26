@@ -388,33 +388,6 @@ const Search = () => {
                       <Loader2 className="h-3 w-3 animate-spin" /> Loading details…
                     </span>
                   )}
-                  {/* Desert/Facilities toggle on the detail map */}
-                  <div className="inline-flex items-center rounded-lg bg-panel-elevated p-0.5">
-                    <button
-                      onClick={() => setMapMode("facilities")}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium transition-colors",
-                        mapMode === "facilities"
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:text-foreground",
-                      )}
-                    >
-                      <Layers className="h-3 w-3" />
-                      Facilities
-                    </button>
-                    <button
-                      onClick={() => setMapMode("deserts")}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium transition-colors",
-                        mapMode === "deserts"
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:text-foreground",
-                      )}
-                    >
-                      <Flame className="h-3 w-3" />
-                      Desert
-                    </button>
-                  </div>
                   <button
                     onClick={() => setShowMap((v) => !v)}
                     className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-panel border border-border-subtle text-xs text-foreground hover:border-primary/40 transition-colors"
