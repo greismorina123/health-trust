@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, ChevronDown, Globe, X } from "lucide-react";
 import {
   type Claim,
+  type ClaimStatus,
   type Facility,
   trustHsl,
   trustTextClass,
@@ -29,6 +30,84 @@ const claimBadge: Record<Claim["status"], { label: string; cls: string }> = {
   inferred: { label: "Inferred", cls: "bg-primary/15 text-primary" },
   contradicted: { label: "Contradicted", cls: "bg-trust-low/15 text-trust-low" },
   unknown: { label: "Unknown", cls: "bg-panel-elevated text-muted-foreground" },
+};
+
+/**
+ * Turn a raw evidence token (e.g. "familyMedicine") into a human label
+ * ("Family Medicine"). Handles camelCase, snake_case, and kebab-case.
+ */
+const humanizeToken = (raw: string): string => {
+  const cleaned = raw.trim().replace(/[_-]+/g, " ");
+  const spaced = cleaned.replace(/([a-z])([A-Z])/g, "$1 $2");
+  return spaced
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+};
+
+const joinList = (items: string[]): string => {
+  if (items.length === 0) return "";
+  if (items.length === 1) return items[0];
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+};
+
+/**
+ * Convert a raw evidence snippet + (capability, source field) into a 1–2
+ * sentence plain-English explanation that has meaning to a non-technical user.
+ *
+ * Example:
+ *   capability="primary_care", status="confirmed",
+ *   source_field="specialties", snippet="familyMedicine, internalMedicine"
+ * → "Listed specialties include Family Medicine and Internal Medicine, which
+ *    confirms primary care is offered here."
+ */
+const explainEvidence = (
+  snippet: string,
+  status: ClaimStatus,
+  capability?: string,
+  sourceField?: string,
+): string => {
+  const raw = (snippet ?? "").trim();
+  if (!raw) return "";
+
+  // Parse comma / pipe / bullet separated tokens.
+  const tokens = raw
+    .split(/[,;|•]/)
+    .map((t) => t.trim())
+    .filter(Boolean);
+  const looksLikeList =
+    tokens.length >= 2 && tokens.every((t) => /^[A-Za-z][A-Za-z0-9 _-]{0,40}$/.test(t));
+
+  const cap = capability ? humanizeToken(capability).toLowerCase() : "this capability";
+  const field = sourceField ? humanizeToken(sourceField).toLowerCase() : "the listed data";
+
+  if (looksLikeList) {
+    const items = joinList(tokens.map(humanizeToken));
+    switch (status) {
+      case "confirmed":
+        return `The ${field} include ${items}, which confirms ${cap} is offered here.`;
+      case "inferred":
+        return `The ${field} mention ${items}, suggesting ${cap} may be available — but it is not explicitly stated.`;
+      case "contradicted":
+        return `The ${field} list ${items}, which does not match the claim of ${cap} and indicates a contradiction.`;
+      default:
+        return `The ${field} list ${items}; coverage of ${cap} could not be confirmed.`;
+    }
+  }
+
+  // Free-text snippet — wrap it in a one-line interpretation.
+  switch (status) {
+    case "confirmed":
+      return `The source notes “${raw}”, confirming ${cap}.`;
+    case "inferred":
+      return `The source notes “${raw}”, which suggests ${cap} but does not state it directly.`;
+    case "contradicted":
+      return `The source notes “${raw}”, which contradicts the claim of ${cap}.`;
+    default:
+      return `The source notes “${raw}”; ${cap} could not be confirmed from the available data.`;
+  }
 };
 
 /**
@@ -218,8 +297,8 @@ export const FacilityDetail = ({ facility, onClose, standalone }: Props) => {
                   <p className="text-xs text-muted-foreground mt-1 ml-1">
                     Source: {c.source_field}
                   </p>
-                  <p className="text-xs text-muted-foreground/80 italic ml-1 line-clamp-2" title={c.source_text}>
-                    {c.source_text}
+                  <p className="text-xs text-muted-foreground/85 leading-snug ml-1" title={c.source_text}>
+                    {explainEvidence(c.source_text, c.status, c.claim, c.source_field)}
                   </p>
                 </li>
               );
@@ -251,9 +330,12 @@ export const FacilityDetail = ({ facility, onClose, standalone }: Props) => {
                       {b.label}
                     </span>
                   </div>
-                  <blockquote className="rounded-md border-l-2 border-border bg-panel-elevated/60 px-3 py-2 text-sm text-foreground/85 italic leading-snug">
-                    “{e.snippet}”
+                  <blockquote className="rounded-md border-l-2 border-border bg-panel-elevated/60 px-3 py-2 text-sm text-foreground/90 leading-snug">
+                    {explainEvidence(e.snippet, e.status, e.capability, e.source_field)}
                   </blockquote>
+                  <p className="text-[11px] text-muted-foreground/70 italic ml-1 line-clamp-1" title={e.snippet}>
+                    Raw: “{e.snippet}”
+                  </p>
                   {e.source_field && (
                     <p className="text-[11px] text-muted-foreground ml-1">
                       Source field: <span className="font-mono">{e.source_field}</span>
