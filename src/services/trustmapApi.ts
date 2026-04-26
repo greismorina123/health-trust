@@ -362,37 +362,39 @@ const mapGapToCapability = (gap: string): CapabilityKey => {
 };
 
 const FOLLOW_UP_BY_GAP: Record<string, string> = {
-  dialysis:
-    "Verify operational dialysis machines and identify transport support options.",
-  icu:
-    "Verify ICU beds, oxygen supply, ventilators, and trained staff.",
-  obstetrics:
-    "Verify emergency obstetric surgery, anesthesia support, blood support, and night coverage.",
-  cardiology:
-    "Verify ECG, emergency cardiac care, oxygen support, and specialist availability.",
-  oncology:
-    "Verify chemotherapy capability, oncology specialists, and referral pathways.",
-  emergency:
-    "Verify emergency stabilization capacity, ambulance availability, blood support, and referral pathways.",
-  neonatal:
-    "Verify NICU beds, incubators, pediatric staff, and emergency newborn transport options.",
-  pediatrics:
-    "Verify NICU beds, incubators, pediatric staff, and emergency newborn transport options.",
-  surgery:
-    "Verify operating-room readiness, anesthesia coverage, and surgical staffing.",
-  anesthesia:
-    "Verify anesthesiologist availability and night coverage before referrals.",
+  dialysis: "Verify operational dialysis machines, trained staff, and patient transport options.",
+  icu: "Verify ICU beds, oxygen supply, ventilators, and trained staff.",
+  obstetrics: "Verify emergency C-section readiness, anesthesia, blood support, and night coverage.",
+  cardiology: "Verify ECG, cardiac emergency care, oxygen support, and specialist availability.",
+  oncology: "Verify oncology specialists, chemotherapy availability, diagnostics, and referral pathways.",
+  emergency: "Verify emergency staff, ambulance access, oxygen, and night coverage.",
+  neonatal: "Verify NICU beds, incubators, pediatric staff, and emergency newborn transport options.",
+  pediatrics: "Verify NICU beds, incubators, pediatric staff, and emergency newborn transport options.",
+  surgery: "Verify operating-room readiness, anesthesia coverage, and surgical staffing.",
+  anesthesia: "Verify anesthesiologist availability and night coverage before referrals.",
 };
 
-export const followUpForGaps = (gaps: string[]): string => {
-  const lines = gaps
-    .map((g) => FOLLOW_UP_BY_GAP[g.toLowerCase()])
-    .filter(Boolean);
-  if (lines.length === 0) {
-    return "Field-verify capability claims and confirm trained staff availability.";
+/** Returns up to 3 short follow-up bullets, one per matched gap. */
+export const followUpBulletsForGaps = (gaps: string[]): string[] => {
+  const seen = new Set<string>();
+  const lines: string[] = [];
+  for (const g of gaps) {
+    const line = FOLLOW_UP_BY_GAP[g.toLowerCase()];
+    if (line && !seen.has(line)) {
+      seen.add(line);
+      lines.push(line);
+      if (lines.length >= 3) break;
+    }
   }
-  return Array.from(new Set(lines)).join(" ");
+  if (lines.length === 0) {
+    return ["Field-verify capability claims and confirm trained staff availability."];
+  }
+  return lines;
 };
+
+/** Legacy single-string variant kept for callers that join paragraphs. */
+export const followUpForGaps = (gaps: string[]): string =>
+  followUpBulletsForGaps(gaps).join(" ");
 
 // Per current product spec: LOWER desert_score means worse coverage.
 //   0–30 → critical (high risk), 31–60 → underserved (medium), 61–100 → better (low).
