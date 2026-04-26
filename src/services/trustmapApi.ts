@@ -281,6 +281,21 @@ export function subScoresFromApi(s: TrustSubscoresApi): SubScores {
   };
 }
 
+/** Convert API evidence_snippets → typed EvidenceSnippet[]. Tolerates field name variants. */
+export function evidenceSnippetsFromApi(
+  snippets: EvidenceSnippetApi[] | undefined,
+): EvidenceSnippet[] {
+  if (!snippets || !Array.isArray(snippets)) return [];
+  return snippets
+    .map((s) => ({
+      capability: String(s.capability ?? "").trim(),
+      status: apiStatusToClaimStatus(s.status ?? "unknown"),
+      source_field: String(s.source_field ?? s.evidence_field ?? "").trim(),
+      snippet: String(s.snippet ?? s.evidence_snippet ?? s.text ?? "").trim(),
+    }))
+    .filter((s) => s.capability && s.snippet);
+}
+
 /** Convert FacilityDetailApi → legacy Facility shape used by FacilityDetail.tsx. */
 export function facilityFromDetail(d: FacilityDetailApi): Facility {
   const redFlags = d.contradictions.map(
@@ -301,6 +316,7 @@ export function facilityFromDetail(d: FacilityDetailApi): Facility {
     claims: claimsFromApi(d.capability_claims),
     red_flags: redFlags,
     web_verification: { status: "not_found", source: null },
+    evidence_snippets: evidenceSnippetsFromApi(d.evidence_snippets),
   };
 }
 
