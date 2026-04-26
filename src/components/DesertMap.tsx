@@ -38,10 +38,50 @@ const FlyController = ({ target }: { target: DesertRegion | null }) => {
   return null;
 };
 
+// Round coordinates to ~1km bucket so districts at the same point are merged.
+const COORD_BUCKET = 0.01;
+const bucketKey = (lat: number, lng: number) =>
+  `${Math.round(lat / COORD_BUCKET)}:${Math.round(lng / COORD_BUCKET)}`;
+
+interface ClusteredMarker {
+  key: string;
+  lat: number;
+  lng: number;
+  avgScore: number;
+  members: DesertRegion[];
+  primary: DesertRegion; // worst-scored district at this point
+}
+
+const clusterByCoord = (regions: DesertRegion[]): ClusteredMarker[] => {
+  const groups = new Map<string, DesertRegion[]>();
+  regions.forEach((r) => {
+    const k = bucketKey(r.lat, r.lng);
+    const arr = groups.get(k) ?? [];
+    arr.push(r);
+    groups.set(k, arr);
+  });
+  return Array.from(groups.entries()).map(([key, members]) => {
+    const avgScore = Math.round(
+      members.reduce((sum, m) => sum + m.riskScore, 0) / members.length,
+    );
+    // "primary" = worst (lowest) score, used as the canonical region for selection.
+    const primary = [...members].sort((a, b) => a.riskScore - b.riskScore)[0];
+    return {
+      key,
+      lat: primary.lat,
+      lng: primary.lng,
+      avgScore,
+      members,
+      primary,
+    };
+  });
+};
+
 export const DesertMap = ({ regions, selectedId, onSelect }: Props) => {
   const mapRef = useRef<LeafletMap | null>(null);
   const { theme } = useTheme();
   const plotted = useMemo(() => regions.filter(hasCoords), [regions]);
+  const clusters = useMemo(() => clusterByCoord(plotted), [plotted]);
   const target = useMemo(
     () => plotted.find((r) => r.id === selectedId) ?? null,
     [plotted, selectedId],
@@ -104,14 +144,16 @@ export const DesertMap = ({ regions, selectedId, onSelect }: Props) => {
         subdomains={["a", "b", "c", "d"]}
       />
       <FlyController target={target} />
-      {plotted.map((r) => {
-        const s = styleForScore(r.riskScore);
-        const isSelected = r.id === selectedId;
+      {clusters.map((c) => {
+        const s = styleForScore(c.avgScore);
+        const isSelected = c.members.some((m) => m.id === selectedId);
+        const count = c.members.length;
+        const radius = isSelected ? s.radius + 4 : s.radius;
         return (
           <CircleMarker
-            key={r.id}
-            center={[r.lat, r.lng]}
-            radius={isSelected ? s.radius + 4 : s.radius}
+            key={c.key}
+            center={[c.lat, c.lng]}
+            radius={count > 1 ? radius + 2 : radius}
             pathOptions={{
               color: s.color,
               fillColor: s.color,
@@ -119,14 +161,18 @@ export const DesertMap = ({ regions, selectedId, onSelect }: Props) => {
               weight: isSelected ? 3 : 1,
               opacity: isSelected ? 1 : 0.7,
             }}
-            eventHandlers={{ click: () => onSelect(r) }}
+            eventHandlers={{ click: () => onSelect(c.primary) }}
           >
             <Tooltip direction="top" offset={[0, -8]} opacity={1} className="desert-tooltip">
               <span style={{ display: "block", lineHeight: 1.35 }}>
-                <strong style={{ fontSize: "13px" }}>{r.areaName}</strong>
+                <strong style={{ fontSize: "13px" }}>
+                  {count > 1 ? `${count} districts` : c.primary.areaName}
+                </strong>
                 <br />
                 <span style={{ fontSize: "12px", opacity: 0.85 }}>
-                  {r.state} · score {r.riskScore}
+                  {count > 1
+                    ? `${c.primary.state} · avg score ${c.avgScore}`
+                    : `${c.primary.state} · score ${c.primary.riskScore}`}
                 </span>
               </span>
             </Tooltip>
