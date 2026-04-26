@@ -77,6 +77,16 @@ export interface TrustSubscoresApi {
   completeness: number;
 }
 
+export interface EvidenceSnippetApi {
+  capability: string;
+  status: TrustStatus;
+  source_field?: string;
+  evidence_field?: string;
+  snippet?: string;
+  evidence_snippet?: string;
+  text?: string;
+}
+
 export interface FacilityDetailApi {
   facility_id: string;
   facility_name: string;
@@ -91,6 +101,7 @@ export interface FacilityDetailApi {
   overall_trust_score: number;
   confidence_interval: [number, number];
   reasoning_summary: string;
+  evidence_snippets?: EvidenceSnippetApi[];
 }
 
 export interface FacilityPinApi {
