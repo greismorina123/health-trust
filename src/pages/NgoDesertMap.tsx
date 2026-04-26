@@ -300,7 +300,7 @@ const LegendDot = ({ color, label }: { color: string; label: string }) => (
   </span>
 );
 
-const RegionDetail = ({ region }: { region: DesertRegion }) => {
+const RegionDetail = ({ region, onClose }: { region: DesertRegion; onClose?: () => void }) => {
   const band = bandForScore(region.riskScore);
   const gaps = region.capabilityGaps ?? [];
   const followUps = followUpBulletsForGaps(gaps);
@@ -310,9 +310,21 @@ const RegionDetail = ({ region }: { region: DesertRegion }) => {
     <aside className="rounded-xl border border-border-subtle bg-panel overflow-hidden flex flex-col">
       <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between gap-2">
         <span className="text-xs uppercase tracking-wider text-muted-foreground">Selected district</span>
-        <span className={cn("text-[11px] font-medium rounded-md px-1.5 py-0.5 border", BAND_BADGE[band])}>
-          {BAND_LABEL[band]}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={cn("text-[11px] font-medium rounded-md px-1.5 py-0.5 border", BAND_BADGE[band])}>
+            {BAND_LABEL[band]}
+          </span>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="h-6 w-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-panel-elevated transition-colors text-base leading-none"
+            >
+              ×
+            </button>
+          )}
+        </div>
       </div>
       <div className="p-4 space-y-4">
         <div>
