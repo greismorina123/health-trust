@@ -187,7 +187,7 @@ const Landing = () => {
         <footer className="mt-24 text-center text-xs text-muted-foreground/60">
           HackNation.ai 2026 · Powered by Databricks
         </footer>
-        <Disclaimer />
+        
       </main>
     </div>
   );
