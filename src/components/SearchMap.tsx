@@ -18,6 +18,32 @@ import {
 } from "@/data/facilities";
 import { useTheme } from "@/components/ThemeProvider";
 
+/** District desert overlay item (compatible with the live /districts API). */
+export interface DistrictOverlayItem {
+  id: string;
+  district: string;
+  state: string;
+  lat: number;
+  lng: number;
+  desert_score: number; // 0 = green (good), 100 = red (severe desert)
+  population?: number;
+  num_facilities?: number;
+  top_capability_gaps: string[];
+}
+
+/** Choose a heat color based on desert_score (0 green → 100 red). */
+const desertHeatColor = (score: number): string => {
+  if (score >= 70) return "hsl(var(--severity-severe))";
+  if (score >= 40) return "hsl(var(--severity-high))";
+  if (score >= 20) return "hsl(var(--severity-mid))";
+  return "hsl(var(--severity-low))";
+};
+
+const desertRadius = (score: number): number => {
+  // Scale 14 → 32 px based on desert_score
+  return 14 + Math.round((Math.max(0, Math.min(100, score)) / 100) * 18);
+};
+
 const INDIA_CENTER: [number, number] = [22.0, 79.0];
 const INDIA_BOUNDS: LatLngBoundsExpression = [
   [6, 65],
