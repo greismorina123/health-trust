@@ -330,9 +330,12 @@ export const FacilityDetail = ({ facility, onClose, standalone }: Props) => {
                       {b.label}
                     </span>
                   </div>
-                  <blockquote className="rounded-md border-l-2 border-border bg-panel-elevated/60 px-3 py-2 text-sm text-foreground/85 italic leading-snug">
-                    “{e.snippet}”
+                  <blockquote className="rounded-md border-l-2 border-border bg-panel-elevated/60 px-3 py-2 text-sm text-foreground/90 leading-snug">
+                    {explainEvidence(e.snippet, e.status, e.capability, e.source_field)}
                   </blockquote>
+                  <p className="text-[11px] text-muted-foreground/70 italic ml-1 line-clamp-1" title={e.snippet}>
+                    Raw: “{e.snippet}”
+                  </p>
                   {e.source_field && (
                     <p className="text-[11px] text-muted-foreground ml-1">
                       Source field: <span className="font-mono">{e.source_field}</span>
