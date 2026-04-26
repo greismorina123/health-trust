@@ -107,9 +107,20 @@ export interface DistrictDesertApi {
   desert_score: number;
   population: number;
   top_capability_gaps: string[];
-  num_facilities: number;
-  avg_trust_score: number;
+  // Some backend versions return num_facilities / avg_trust_score, others omit them.
+  num_facilities?: number;
+  avg_trust_score?: number;
+  // Optional geometry — most backend versions don't include these.
+  latitude?: number;
+  longitude?: number;
 }
+
+// Wire shape can be either a raw array or { districts: [...] }.
+// Field for gaps can be `top_capability_gaps` or `top_gaps`.
+type DistrictWire = Partial<DistrictDesertApi> & {
+  top_gaps?: string[];
+};
+type DistrictsWireResponse = DistrictWire[] | { districts: DistrictWire[] };
 
 // ============================================================================
 // Low-level fetch helper
@@ -186,7 +197,27 @@ export async function getFacilityPins(): Promise<FacilityPinApi[]> {
 }
 
 export async function getDistricts(): Promise<DistrictDesertApi[]> {
-  return request<DistrictDesertApi[]>("/districts");
+  const raw = await request<DistrictsWireResponse>("/districts");
+  const list: DistrictWire[] = Array.isArray(raw)
+    ? raw
+    : Array.isArray((raw as { districts?: DistrictWire[] })?.districts)
+      ? (raw as { districts: DistrictWire[] }).districts
+      : [];
+  return list
+    .filter((d) => d && d.district && d.state)
+    .map((d) => ({
+      district: String(d.district),
+      state: String(d.state),
+      desert_score: Number(d.desert_score ?? 0),
+      population: Number(d.population ?? 0),
+      top_capability_gaps: (d.top_capability_gaps ?? d.top_gaps ?? []).map(
+        (g) => String(g).toLowerCase(),
+      ),
+      num_facilities: d.num_facilities,
+      avg_trust_score: d.avg_trust_score,
+      latitude: d.latitude,
+      longitude: d.longitude,
+    }));
 }
 
 // ============================================================================
