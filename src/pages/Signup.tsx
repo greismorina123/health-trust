@@ -76,12 +76,6 @@ const Signup = () => {
             <Field label="Full Name" value={form.name} onChange={update("name")} placeholder="Aarav Sharma" />
             <Field label="Email" type="email" value={form.email} onChange={update("email")} placeholder="you@example.com" />
 
-            {role === "doctor" && (
-              <>
-                <Field label="Medical License Number" value={form.license} onChange={update("license")} placeholder="MCI-XXXXXX" />
-                <Field label="Hospital Affiliation" value={form.affiliation} onChange={update("affiliation")} placeholder="AIIMS Delhi" />
-              </>
-            )}
             {role === "government" && (
               <>
                 <Field label="Organization Name" value={form.org} onChange={update("org")} placeholder="Ministry of Health / NGO" />
