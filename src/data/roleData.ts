@@ -384,7 +384,7 @@ export const capabilityFilters: CapabilityKey[] = [
 ];
 
 export const SAFETY_NOTE =
-  "CareMap India is a planning and discovery tool. Facility capabilities should be verified with local providers before clinical or emergency decisions are made.";
+  "Health Trust is a planning and discovery tool. Facility capabilities should be verified with local providers before clinical or emergency decisions are made.";
 
 export const userQueryChips = [
   "Emergency C-section near me",
