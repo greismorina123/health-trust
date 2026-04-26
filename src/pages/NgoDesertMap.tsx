@@ -246,7 +246,7 @@ const NgoDesertMap = () => {
                   <Th>Risk</Th>
                   <Th>Area</Th>
                   <Th>State</Th>
-                  <Th>Missing capability</Th>
+                  <Th>Capability gaps</Th>
                   <Th>Nearest verified</Th>
                   <Th className="text-right">Distance</Th>
                   <Th className="text-right">Avg Trust</Th>
@@ -274,7 +274,26 @@ const NgoDesertMap = () => {
                       </Td>
                       <Td className="text-foreground">{r.areaName}</Td>
                       <Td className="text-muted-foreground">{r.state}</Td>
-                      <Td className="text-foreground/90">{r.missingCapability}</Td>
+                      <Td>
+                        <div className="flex flex-wrap gap-1 max-w-[220px]">
+                          {(r.capabilityGaps && r.capabilityGaps.length > 0
+                            ? r.capabilityGaps
+                            : [String(r.missingCapability).toLowerCase()]
+                          ).slice(0, 4).map((g) => (
+                            <span
+                              key={g}
+                              className="inline-flex items-center rounded-md border border-trust-low/30 bg-trust-low/10 text-trust-low px-1.5 py-0.5 text-[10px] font-medium"
+                            >
+                              {titleCase(g)}
+                            </span>
+                          ))}
+                          {(r.capabilityGaps?.length ?? 0) > 4 && (
+                            <span className="text-[10px] text-muted-foreground self-center">
+                              +{(r.capabilityGaps?.length ?? 0) - 4}
+                            </span>
+                          )}
+                        </div>
+                      </Td>
                       <Td className="text-foreground/90">{top?.name ?? <span className="text-muted-foreground/60">n/a</span>}</Td>
                       <Td className="text-right text-muted-foreground">{top ? `${top.distanceKm} km` : "—"}</Td>
                       <Td className="text-right" style={{ color: trustHsl(r.averageTrustScore) }}>
@@ -343,8 +362,20 @@ const RegionDetail = ({ region, onCollapse }: { region: DesertRegion; onCollapse
       </div>
 
       <div>
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Missing capability</p>
-        <p className="text-sm font-medium text-trust-low mt-0.5">{region.missingCapability}</p>
+        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Capability gaps</p>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          {(region.capabilityGaps && region.capabilityGaps.length > 0
+            ? region.capabilityGaps
+            : [String(region.missingCapability).toLowerCase()]
+          ).map((g) => (
+            <span
+              key={g}
+              className="inline-flex items-center rounded-md border border-trust-low/30 bg-trust-low/10 text-trust-low px-2 py-0.5 text-[11px] font-medium"
+            >
+              {g.charAt(0).toUpperCase() + g.slice(1)}
+            </span>
+          ))}
+        </div>
       </div>
 
       <div>
