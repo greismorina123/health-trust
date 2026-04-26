@@ -1,13 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Building2,
-  Filter,
-  AlertTriangle,
-  Users,
-  Activity,
-  MapPin,
-  Loader2,
-} from "lucide-react";
+import { Filter, MapPin, Loader2 } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { DesertMap } from "@/components/DesertMap";
 import { Disclaimer } from "@/components/Disclaimer";
@@ -111,70 +103,39 @@ const NgoDesertMap = () => {
     [filtered, selectedId],
   );
 
-  // Summary metrics.
-  const criticalCount = filtered.filter((r) => r.riskScore <= 30).length;
-  const populationAffected = filtered.reduce((sum, r) => sum + (r.population ?? 0), 0);
-  const avgScore = filtered.length
-    ? Math.round(filtered.reduce((s, r) => s + r.riskScore, 0) / filtered.length)
-    : 0;
-
   return (
     <div className="min-h-screen bg-background">
       <Nav variant="app" />
 
       <main className="pt-16 pb-32 px-4 sm:px-6 max-w-[1400px] mx-auto">
-        {/* Header */}
-        <div className="fade-up mb-5">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-            <Building2 className="h-3.5 w-3.5" />
-            NGO Desert Map
-          </div>
-          <h1 className="mt-1 text-xl font-semibold text-foreground">
-            Where is the biggest healthcare access problem?
-          </h1>
+        {/* Filter bar — only the working filter sits above the map */}
+        <section className="fade-up mb-4">
           {usingFallback && (
-            <p className="mt-2 text-xs text-trust-mid">
+            <p className="mb-2 text-xs text-trust-mid">
               Backend unavailable — showing cached fallback data.
             </p>
           )}
-        </div>
-
-        {/* Top: filter + 3 summary cards in a single bar */}
-        <section className="fade-up grid gap-3 md:grid-cols-[minmax(220px,300px)_1fr] mb-4">
-          <div className="rounded-xl border border-border-subtle bg-panel p-3.5">
-            <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
+          <div className="rounded-xl border border-border-subtle bg-panel p-3.5 flex flex-col sm:flex-row sm:items-center gap-3">
+            <label
+              htmlFor="gap-filter"
+              className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground shrink-0"
+            >
               <Filter className="h-3 w-3" />
               View desert risk for
             </label>
             <select
+              id="gap-filter"
               value={gap}
               onChange={(e) => setGap(e.target.value)}
-              className="w-full h-10 px-3 rounded-lg bg-background border border-border-subtle text-sm text-foreground outline-none focus:border-primary/50"
+              className="w-full sm:max-w-xs h-10 px-3 rounded-lg bg-background border border-border-subtle text-sm text-foreground outline-none focus:border-primary/50"
             >
               {GAP_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}
             </select>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <SummaryCard
-              icon={<AlertTriangle className="h-4 w-4 text-trust-low" />}
-              label="Critical districts"
-              value={isLoading ? "—" : criticalCount.toLocaleString()}
-              hint="Score 0–30"
-            />
-            <SummaryCard
-              icon={<Users className="h-4 w-4 text-primary" />}
-              label="Population affected"
-              value={isLoading ? "—" : formatPop(populationAffected)}
-              hint={`${filtered.length} districts`}
-            />
-            <SummaryCard
-              icon={<Activity className="h-4 w-4 text-trust-mid" />}
-              label="Average desert score"
-              value={isLoading ? "—" : `${avgScore}`}
-              hint="Lower = worse"
-            />
+            <span className="sm:ml-auto text-[11px] text-muted-foreground">
+              {isLoading ? "Loading…" : `${filtered.length} districts shown`}
+            </span>
           </div>
         </section>
 
@@ -272,27 +233,6 @@ const NgoDesertMap = () => {
   );
 };
 
-const SummaryCard = ({
-  icon,
-  label,
-  value,
-  hint,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  hint?: string;
-}) => (
-  <div className="rounded-xl border border-border-subtle bg-panel p-3.5">
-    <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-      {icon}
-      {label}
-    </div>
-    <div className="mt-1.5 text-xl font-semibold text-foreground">{value}</div>
-    {hint && <div className="text-[10px] text-muted-foreground mt-0.5">{hint}</div>}
-  </div>
-);
-
 const LegendDot = ({ color, label }: { color: string; label: string }) => (
   <span className="flex items-center gap-1.5">
     <span className={cn("h-2 w-2 rounded-full", color)} />
@@ -388,10 +328,9 @@ const Stat = ({ label, value }: { label: string; value: string }) => (
 );
 
 const formatPop = (n: number): string => {
-  if (n >= 10_000_000) return `${(n / 10_000_000).toFixed(1)}cr`;
-  if (n >= 100_000) return `${(n / 100_000).toFixed(1)}L`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}k`;
-  return n.toLocaleString();
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M people`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K people`;
+  return `${n.toLocaleString()} people`;
 };
 
 export default NgoDesertMap;
