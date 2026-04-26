@@ -568,6 +568,35 @@ export function desertRegionFromDistrict(d: DistrictDesertApi, index = 0): Deser
 }
 
 // ============================================================================
+// District → SearchMap district-overlay adapter (live /districts endpoint)
+// ============================================================================
+import type { DistrictOverlayItem } from "@/components/SearchMap";
+
+export function districtOverlayFromApi(
+  d: DistrictDesertApi,
+  index = 0,
+): DistrictOverlayItem | null {
+  const apiCoords: [number, number] | null =
+    typeof d.latitude === "number" && typeof d.longitude === "number"
+      ? [d.latitude, d.longitude]
+      : null;
+  const coords = apiCoords ?? coordsForDistrict(d.district, d.state);
+  if (!coords) return null;
+  const slug = `${d.state}-${d.district}-${index}`.toLowerCase().replace(/\s+/g, "-");
+  return {
+    id: slug,
+    district: d.district,
+    state: d.state,
+    lat: coords[0],
+    lng: coords[1],
+    desert_score: d.desert_score,
+    population: d.population,
+    num_facilities: d.num_facilities,
+    top_capability_gaps: d.top_capability_gaps ?? [],
+  };
+}
+
+// ============================================================================
 // Trust color helper (mirrors backend tier rules)
 // ============================================================================
 export const trustTierFromScore = (s: number) =>

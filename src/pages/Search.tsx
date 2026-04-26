@@ -1,10 +1,20 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { Search as SearchIcon, AlertTriangle, MapPin, X, ArrowLeft, Loader2 } from "lucide-react";
+import {
+  Search as SearchIcon,
+  AlertTriangle,
+  MapPin,
+  Loader2,
+  ChevronDown,
+  Brain,
+  Layers,
+  Flame,
+} from "lucide-react";
 import { Nav } from "@/components/Nav";
-import { SearchMap } from "@/components/SearchMap";
+import { SearchMap, type DistrictOverlayItem } from "@/components/SearchMap";
 import { FacilityDetail } from "@/components/FacilityDetail";
 import { Disclaimer } from "@/components/Disclaimer";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { type Facility, facilities as fallbackFacilities, trustTier } from "@/data/facilities";
 import { useRole, dashboardPathFor } from "@/context/RoleContext";
 
@@ -15,7 +25,9 @@ import {
   facilityFromDetail,
   getFacilityPins,
   getFacilityDetail,
+  getDistricts,
   searchFacilities,
+  districtOverlayFromApi,
 } from "@/services/trustmapApi";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -27,6 +39,15 @@ const trustBadgeClass = (score: number) => {
   return "bg-trust-low/15 text-trust-low";
 };
 
+const EXAMPLE_CHIPS = [
+  "Suspicious dental clinics in India",
+  "Emergency C-section in rural Maharashtra",
+  "Worst dialysis deserts in India",
+  "Multi-specialty hospitals that look too good to be true",
+];
+
+type MapMode = "facilities" | "deserts";
+
 const Search = () => {
   const { role } = useRole();
   const [params, setParams] = useSearchParams();
@@ -36,7 +57,6 @@ const Search = () => {
   const [query, setQuery] = useState(initialQ);
   const [submittedQuery, setSubmittedQuery] = useState<string | null>(initialQ || null);
   const [selected, setSelected] = useState<Facility | null>(null);
-  const [showMap, setShowMap] = useState(true);
 
   const [pins, setPins] = useState<Facility[]>([]);
   const [results, setResults] = useState<Facility[]>([]);
@@ -44,6 +64,12 @@ const Search = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [reasoningOpen, setReasoningOpen] = useState(false);
+
+  // Map mode + district overlay (live /districts)
+  const [mapMode, setMapMode] = useState<MapMode>("facilities");
+  const [districts, setDistricts] = useState<DistrictOverlayItem[]>([]);
+  const [districtsLoading, setDistrictsLoading] = useState(false);
 
   // Initial pin load
   useEffect(() => {
@@ -61,6 +87,29 @@ const Search = () => {
     };
   }, []);
 
+  // Load districts on first switch into "deserts" mode
+  useEffect(() => {
+    if (mapMode !== "deserts" || districts.length > 0 || districtsLoading) return;
+    let cancelled = false;
+    setDistrictsLoading(true);
+    (async () => {
+      try {
+        const list = await getDistricts();
+        const mapped = list
+          .map((d, i) => districtOverlayFromApi(d, i))
+          .filter((x): x is DistrictOverlayItem => !!x);
+        if (!cancelled) setDistricts(mapped);
+      } catch {
+        if (!cancelled) toast("Could not load district desert data.");
+      } finally {
+        if (!cancelled) setDistrictsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [mapMode, districts.length, districtsLoading]);
+
   // Run a query against the API
   const runSearch = async (q: string) => {
     setIsSearching(true);
@@ -68,13 +117,13 @@ const Search = () => {
     try {
       const resp = await searchFacilities(q);
       setQueryResponse(resp);
-      // Filter out non-facility entries (e.g. district/desert results) which lack coords/id
       const mapped = resp.results
-        .filter((r: any) => r && r.facility_id && Number.isFinite(r.latitude) && Number.isFinite(r.longitude))
+        .filter((r) => r && r.facility_id && Number.isFinite(r.latitude) && Number.isFinite(r.longitude))
         .map(facilityFromSearchResult);
       setResults(mapped);
-      // Do not auto-open — let the user pick a result from the list
       setSelected(null);
+      // Auto-switch back to facilities mode so result pins are visible
+      setMapMode("facilities");
     } catch {
       setSearchError("Search failed. Showing fallback data.");
       setQueryResponse(null);
@@ -91,15 +140,6 @@ const Search = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submittedQuery]);
 
-  useEffect(() => {
-    if (!selected) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelected(null);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [selected]);
-
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const q = query.trim();
@@ -111,15 +151,19 @@ const Search = () => {
     setSubmittedQuery(q);
   };
 
+  const submitChip = (text: string) => {
+    setQuery(text);
+    setParams({ q: text });
+    setSubmittedQuery(text);
+  };
+
   const openFacility = async (f: Facility) => {
     setSelected(f);
-    setShowMap(true);
     setIsLoadingDetail(true);
     try {
       const detail = await getFacilityDetail(f.id);
       setSelected(facilityFromDetail(detail));
     } catch {
-      // 404 / error → keep the lightweight version, mark summary
       setSelected({ ...f, summary: "Detailed facility record unavailable." });
     } finally {
       setIsLoadingDetail(false);
@@ -128,19 +172,35 @@ const Search = () => {
 
   const ci = queryResponse?.confidence_interval;
 
+  // Map source: results when searched, otherwise initial pins
+  const mapFacilities = submittedQuery && results.length ? [...pins, ...results] : pins;
+  // Dedupe by id (keep result version which has fresher data)
+  const uniqMapFacilities = useMemo(() => {
+    const seen = new Map<string, Facility>();
+    for (const f of mapFacilities) seen.set(f.id, f);
+    return Array.from(seen.values());
+  }, [mapFacilities]);
+  const mapResultIds = submittedQuery ? results.map((r) => r.id) : [];
+
+  // Fit map to result bounds when results arrive
+  const fitBounds = useMemo<Array<[number, number]> | null>(() => {
+    if (!results.length) return null;
+    return results
+      .filter((r) => Number.isFinite(r.lat) && Number.isFinite(r.lng))
+      .map((r) => [r.lat, r.lng] as [number, number]);
+  }, [results]);
+
   if (role !== "user") return <Navigate to={dashboardPathFor(role)} replace />;
 
-  // Map source: results when searched, otherwise initial pins
-  const mapFacilities = submittedQuery && results.length ? results : pins;
-  const mapResultIds = submittedQuery ? results.map((r) => r.id) : [];
+  const reasoningSteps = queryResponse?.reasoning_steps ?? [];
 
   return (
     <div className="min-h-screen bg-background">
       <Nav variant="app" />
 
-      <main className="pt-16 pb-16 px-4 sm:px-6 max-w-5xl mx-auto">
+      <main className="pt-16 pb-16 px-4 sm:px-6 max-w-[1400px] mx-auto">
         {/* Search input */}
-        <form onSubmit={submit} className="fade-up">
+        <form onSubmit={submit} className="fade-up max-w-3xl mx-auto">
           <div className="relative h-12 rounded-xl bg-panel border border-border-subtle flex items-center pl-4 pr-1.5 focus-within:border-primary/50 transition-colors">
             <SearchIcon className="h-4 w-4 text-muted-foreground mr-2 shrink-0" />
             <input
@@ -158,36 +218,83 @@ const Search = () => {
               Search
             </button>
           </div>
+
+          {/* Feature 1: example chips — hidden after first submit */}
+          {!submittedQuery && (
+            <div className="mt-3 flex flex-wrap gap-2 fade-up">
+              {EXAMPLE_CHIPS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => submitChip(c)}
+                  className="px-3 py-1.5 rounded-full bg-panel border border-border-subtle text-xs text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          )}
         </form>
 
-
-
         {searchError && (
-          <div className="mt-3 rounded-lg border border-trust-low/30 bg-trust-low/5 px-3.5 py-2 text-xs text-trust-low">
+          <div className="mt-3 max-w-3xl mx-auto rounded-lg border border-trust-low/30 bg-trust-low/5 px-3.5 py-2 text-xs text-trust-low">
             {searchError}
           </div>
         )}
 
-        {/* Empty state */}
-        {!submittedQuery && (
-          <div className="mt-16 flex flex-col items-center text-center fade-up">
-            <SearchIcon className="h-6 w-6 text-muted-foreground/60" />
-            <p className="mt-3 text-sm text-muted-foreground">
-              Ask a question or pick an example to get started
-            </p>
-            {pins.length > 0 && (
-              <p className="mt-1 text-xs text-muted-foreground/60">
-                {pins.length} facilities loaded on the map
-              </p>
+        {/* Feature 3: two-pane layout — results list + always-visible map */}
+        <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          {/* LEFT: Reasoning steps + results list */}
+          <div className="space-y-3 min-w-0">
+            {/* Feature 2: Reasoning steps card */}
+            {reasoningSteps.length > 0 && (
+              <div className="rounded-xl border border-border-subtle bg-panel overflow-hidden fade-up">
+                <button
+                  onClick={() => setReasoningOpen((o) => !o)}
+                  className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-panel-elevated/40 transition-colors"
+                >
+                  <Brain className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span className="text-sm font-medium text-foreground">
+                    Agent reasoning
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    — click to {reasoningOpen ? "collapse" : "expand"} ({reasoningSteps.length} steps)
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 text-muted-foreground ml-auto transition-transform",
+                      !reasoningOpen && "-rotate-90",
+                    )}
+                  />
+                </button>
+                {reasoningOpen && (
+                  <ol className="border-t border-border-subtle divide-y divide-border-subtle/60">
+                    {reasoningSteps.map((step, i) => {
+                      const isPass = /^\s*\[PASS\]/i.test(step);
+                      const isFail = /^\s*\[FAIL\]/i.test(step);
+                      return (
+                        <li
+                          key={i}
+                          className={cn(
+                            "px-4 py-2 text-xs leading-relaxed font-mono",
+                            isPass && "text-trust-high",
+                            isFail && "text-trust-low",
+                            !isPass && !isFail && "text-foreground/85",
+                          )}
+                        >
+                          <span className="text-muted-foreground/60 mr-2">{i + 1}.</span>
+                          {step}
+                        </li>
+                      );
+                    })}
+                  </ol>
+                )}
+              </div>
             )}
-          </div>
-        )}
 
-        {/* Results */}
-        {submittedQuery && (
-          <div className="mt-6">
-            <section>
-              <div className="flex items-center gap-2 mb-2 px-1">
+            {/* Results header */}
+            {submittedQuery && (
+              <div className="flex items-center gap-2 px-1">
                 <span className="text-xs uppercase tracking-wide text-muted-foreground">Results</span>
                 <span className="px-1.5 py-0.5 rounded-md bg-panel-elevated text-xs text-foreground">
                   {isSearching ? "…" : results.length}
@@ -198,6 +305,25 @@ const Search = () => {
                   </span>
                 )}
               </div>
+            )}
+
+            {/* Empty state when nothing submitted */}
+            {!submittedQuery && (
+              <div className="rounded-xl border border-border-subtle bg-panel p-8 text-center">
+                <SearchIcon className="h-5 w-5 text-muted-foreground/60 mx-auto" />
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Ask a question or pick an example above to get started.
+                </p>
+                {pins.length > 0 && (
+                  <p className="mt-1 text-xs text-muted-foreground/60">
+                    {pins.length} facilities loaded on the map →
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Results list */}
+            {submittedQuery && (
               <div className="space-y-2">
                 {isSearching && results.length === 0 && (
                   <div className="rounded-xl border border-border-subtle bg-panel p-6 text-center text-xs text-muted-foreground">
@@ -250,71 +376,92 @@ const Search = () => {
                   );
                 })}
               </div>
-            </section>
+            )}
           </div>
-        )}
 
-        {/* Selected facility detail + inline map */}
-        {selected && (
-          <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm overflow-y-auto fade-up">
-            <Nav variant="app" />
-            <div className="pt-16 pb-12 px-4 sm:px-6 max-w-6xl mx-auto">
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  onClick={() => setSelected(null)}
-                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to results
-                </button>
-                <div className="flex items-center gap-2">
-                  {isLoadingDetail && (
-                    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Loader2 className="h-3 w-3 animate-spin" /> Loading details…
-                    </span>
-                  )}
+          {/* RIGHT: always-visible map (sticky) */}
+          <div className="min-w-0">
+            <div className="sticky top-20 h-[calc(100vh-110px)] rounded-xl border border-border-subtle bg-panel overflow-hidden flex flex-col">
+              {/* Feature 5: mode toggle */}
+              <div className="flex items-center gap-2 border-b border-border-subtle px-3 py-2">
+                <div className="inline-flex items-center rounded-lg bg-panel-elevated p-0.5">
                   <button
-                    onClick={() => setShowMap((v) => !v)}
-                    className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-panel border border-border-subtle text-xs text-foreground hover:border-primary/40 transition-colors"
+                    onClick={() => setMapMode("facilities")}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium transition-colors",
+                      mapMode === "facilities"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
                   >
-                    {showMap ? (<><X className="h-3.5 w-3.5" /> Hide map</>) : (<><MapPin className="h-3.5 w-3.5" /> Show map</>)}
+                    <Layers className="h-3 w-3" />
+                    Facilities
+                  </button>
+                  <button
+                    onClick={() => setMapMode("deserts")}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md text-xs font-medium transition-colors",
+                      mapMode === "deserts"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <Flame className="h-3 w-3" />
+                    Desert Map
                   </button>
                 </div>
+                <span className="ml-auto text-[11px] text-muted-foreground">
+                  {mapMode === "facilities"
+                    ? `${uniqMapFacilities.length} pins${results.length ? ` · ${results.length} highlighted` : ""}`
+                    : districtsLoading
+                      ? "Loading districts…"
+                      : `${districts.length} districts`}
+                </span>
               </div>
-
-              <div className={cn("grid gap-4", showMap ? "lg:grid-cols-[420px_1fr]" : "grid-cols-1 max-w-2xl mx-auto")}>
-                <div className="bg-panel border border-border-subtle rounded-xl overflow-hidden">
-                  <FacilityDetail facility={selected} onClose={() => setSelected(null)} />
-                </div>
-                {showMap && (
-                  <div className="bg-panel border border-border-subtle rounded-xl overflow-hidden h-[60vh] lg:h-[calc(100vh-140px)] sticky top-16">
-                    <div className="px-4 py-2.5 border-b border-border-subtle flex items-center gap-2">
-                      <MapPin className="h-3.5 w-3.5 text-primary" />
-                      <span className="text-xs text-foreground font-medium">{selected.district}, {selected.state}</span>
-                      {typeof selected.lat === "number" && typeof selected.lng === "number" && (
-                        <span className="text-xs text-muted-foreground ml-auto font-mono">
-                          {selected.lat.toFixed(3)}, {selected.lng.toFixed(3)}
-                        </span>
-                      )}
-                    </div>
-                    <div className="relative w-full h-[calc(100%-40px)]">
-                      <SearchMap
-                        mode="facilities"
-                        selectedId={selected.id}
-                        resultIds={mapResultIds}
-                        onSelectFacility={(f) => openFacility(f)}
-                        onSelectDesert={() => {}}
-                        flyTo={{ lat: selected.lat, lng: selected.lng, zoom: 11 }}
-                        fitBounds={null}
-                        facilityList={mapFacilities}
-                      />
-                    </div>
-                  </div>
-                )}
+              <div className="relative flex-1">
+                <SearchMap
+                  mode={mapMode}
+                  selectedId={selected?.id ?? null}
+                  resultIds={mapResultIds}
+                  onSelectFacility={(f) => openFacility(f)}
+                  onSelectDesert={() => {}}
+                  flyTo={selected && Number.isFinite(selected.lat) && Number.isFinite(selected.lng)
+                    ? { lat: selected.lat, lng: selected.lng, zoom: 9 }
+                    : null}
+                  fitBounds={fitBounds}
+                  facilityList={uniqMapFacilities}
+                  dimNonResults
+                  districtList={mapMode === "deserts" ? districts : undefined}
+                  interactive
+                />
               </div>
             </div>
           </div>
-        )}
+        </div>
+
+        {/* Feature 4: slide-in drawer instead of full-screen modal */}
+        <Sheet
+          open={!!selected}
+          onOpenChange={(open) => {
+            if (!open) setSelected(null);
+          }}
+        >
+          <SheetContent
+            side="right"
+            className="w-full sm:max-w-[480px] p-0 overflow-y-auto bg-panel"
+          >
+            {selected && (
+              <div className="relative">
+                {isLoadingDetail && (
+                  <div className="absolute top-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-md bg-panel-elevated/80 backdrop-blur px-2 py-1 text-[11px] text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Loading details…
+                  </div>
+                )}
+                <FacilityDetail facility={selected} onClose={() => setSelected(null)} />
+              </div>
+            )}
+          </SheetContent>
+        </Sheet>
 
         <span className="hidden">{navigate.length}</span>
         <Disclaimer />

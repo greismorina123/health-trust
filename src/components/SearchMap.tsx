@@ -18,6 +18,32 @@ import {
 } from "@/data/facilities";
 import { useTheme } from "@/components/ThemeProvider";
 
+/** District desert overlay item (compatible with the live /districts API). */
+export interface DistrictOverlayItem {
+  id: string;
+  district: string;
+  state: string;
+  lat: number;
+  lng: number;
+  desert_score: number; // 0 = green (good), 100 = red (severe desert)
+  population?: number;
+  num_facilities?: number;
+  top_capability_gaps: string[];
+}
+
+/** Choose a heat color based on desert_score (0 green → 100 red). */
+const desertHeatColor = (score: number): string => {
+  if (score >= 70) return "hsl(var(--severity-severe))";
+  if (score >= 40) return "hsl(var(--severity-high))";
+  if (score >= 20) return "hsl(var(--severity-mid))";
+  return "hsl(var(--severity-low))";
+};
+
+const desertRadius = (score: number): number => {
+  // Scale 14 → 32 px based on desert_score
+  return 14 + Math.round((Math.max(0, Math.min(100, score)) / 100) * 18);
+};
+
 const INDIA_CENTER: [number, number] = [22.0, 79.0];
 const INDIA_BOUNDS: LatLngBoundsExpression = [
   [6, 65],
@@ -33,7 +59,7 @@ const severityStyle: Record<DesertZone["severity"], { color: string; radius: num
 interface Props {
   mode: "facilities" | "deserts";
   selectedId: string | null;
-  /** IDs of facilities that are search results (get a white ring). */
+  /** IDs of facilities that are search results (get a white ring + pulse). */
   resultIds: string[];
   onSelectFacility: (f: Facility) => void;
   onSelectDesert: (d: DesertZone, screenPos: { x: number; y: number }) => void;
@@ -42,6 +68,12 @@ interface Props {
   fitBounds: Array<[number, number]> | null;
   /** Optional override list of facilities (e.g., live API pins). Falls back to mock. */
   facilityList?: Facility[];
+  /** When true, non-result facility pins are dimmed. */
+  dimNonResults?: boolean;
+  /** Live district overlay (used when mode === "deserts" and provided). */
+  districtList?: DistrictOverlayItem[];
+  /** Click handler for live district overlay items. */
+  onSelectDistrict?: (d: DistrictOverlayItem) => void;
 }
 
 const MapController = ({
@@ -75,7 +107,11 @@ export const SearchMap = ({
   flyTo,
   fitBounds,
   facilityList,
-}: Props) => {
+  dimNonResults = false,
+  districtList,
+  onSelectDistrict,
+  interactive = false,
+}: Props & { interactive?: boolean }) => {
   const mapRef = useRef<LeafletMap | null>(null);
   const resultSet = useMemo(() => new Set(resultIds), [resultIds]);
   const { theme } = useTheme();
@@ -84,19 +120,22 @@ export const SearchMap = ({
     () => rawSource.filter((f) => Number.isFinite(f.lat) && Number.isFinite(f.lng)),
     [rawSource],
   );
+  const hasResults = resultSet.size > 0;
 
   const facilityMarkers = useMemo(
     () =>
       facilitySource.map((f) => {
         const isSelected = f.id === selectedId;
         const isResult = resultSet.has(f.id);
+        const dimmed = dimNonResults && hasResults && !isResult;
         const color = trustHsl(f.trust_score);
+        const hasContradictions = (f.red_flags?.length ?? 0) > 0;
         return (
           <LayerGroup key={f.id}>
-            {isSelected && (
+            {(isSelected || isResult) && (
               <CircleMarker
                 center={[f.lat, f.lng]}
-                radius={14}
+                radius={isResult ? 12 : 14}
                 pathOptions={{
                   color,
                   fillColor: color,
@@ -109,12 +148,13 @@ export const SearchMap = ({
             )}
             <CircleMarker
               center={[f.lat, f.lng]}
-              radius={7}
+              radius={isResult ? 8 : 7}
               pathOptions={{
                 color: isResult ? "#ffffff" : color,
                 fillColor: color,
-                fillOpacity: 0.85,
-                weight: isResult ? 2 : 1.5,
+                fillOpacity: dimmed ? 0.25 : 0.9,
+                weight: isResult ? 2.5 : 1.5,
+                opacity: dimmed ? 0.4 : 1,
               }}
               eventHandlers={{
                 click: () => onSelectFacility(f),
@@ -125,13 +165,32 @@ export const SearchMap = ({
                   <strong>{f.name}</strong>
                   <br />
                   Score: {f.trust_score}
+                  {hasContradictions && (
+                    <>
+                      <br />
+                      <span style={{ color: "hsl(var(--trust-low))" }}>⚠ contradictions</span>
+                    </>
+                  )}
                 </span>
               </Tooltip>
             </CircleMarker>
+            {hasContradictions && !dimmed && (
+              <CircleMarker
+                center={[f.lat, f.lng]}
+                radius={3}
+                pathOptions={{
+                  color: "hsl(var(--trust-low))",
+                  fillColor: "hsl(var(--trust-low))",
+                  fillOpacity: 1,
+                  weight: 1,
+                }}
+                interactive={false}
+              />
+            )}
           </LayerGroup>
         );
       }),
-    [selectedId, onSelectFacility, resultSet, facilitySource],
+    [selectedId, onSelectFacility, resultSet, facilitySource, dimNonResults, hasResults],
   );
 
   const desertMarkers = useMemo(
@@ -165,6 +224,44 @@ export const SearchMap = ({
     [onSelectDesert],
   );
 
+  const districtOverlay = useMemo(() => {
+    if (!districtList) return null;
+    return districtList
+      .filter((d) => Number.isFinite(d.lat) && Number.isFinite(d.lng))
+      .map((d) => {
+        const color = desertHeatColor(d.desert_score);
+        const r = desertRadius(d.desert_score);
+        const gaps = (d.top_capability_gaps ?? []).slice(0, 3).join(", ") || "—";
+        return (
+          <CircleMarker
+            key={d.id}
+            center={[d.lat, d.lng]}
+            radius={r}
+            pathOptions={{
+              color,
+              fillColor: color,
+              fillOpacity: 0.45,
+              weight: 1,
+              opacity: 0.7,
+            }}
+            eventHandlers={{
+              click: () => onSelectDistrict?.(d),
+            }}
+          >
+            <Tooltip direction="top" offset={[0, -6]} opacity={1} className="desert-tooltip">
+              <span style={{ display: "block", lineHeight: 1.35 }}>
+                <strong>{d.district}</strong>, {d.state}
+                <br />
+                Desert score: <strong>{d.desert_score}</strong>
+                <br />
+                <span style={{ opacity: 0.75 }}>Top gaps: {gaps}</span>
+              </span>
+            </Tooltip>
+          </CircleMarker>
+        );
+      });
+  }, [districtList, onSelectDistrict]);
+
   return (
     <MapContainer
       center={INDIA_CENTER}
@@ -174,12 +271,12 @@ export const SearchMap = ({
       maxBounds={INDIA_BOUNDS}
       maxBoundsViscosity={1.0}
       zoomControl={true}
-      scrollWheelZoom={false}
-      doubleClickZoom={false}
-      touchZoom={false}
-      dragging={false}
-      boxZoom={false}
-      keyboard={false}
+      scrollWheelZoom={interactive}
+      doubleClickZoom={interactive}
+      touchZoom={interactive}
+      dragging={interactive}
+      boxZoom={interactive}
+      keyboard={interactive}
       style={{ width: "100%", height: "100%" }}
       ref={(m) => {
         mapRef.current = m;
@@ -196,7 +293,11 @@ export const SearchMap = ({
         subdomains={["a", "b", "c", "d"]}
       />
       <MapController flyTo={flyTo} fitBounds={fitBounds} />
-      {mode === "facilities" ? <>{facilityMarkers}</> : <>{desertMarkers}</>}
+      {mode === "facilities"
+        ? <>{facilityMarkers}</>
+        : districtOverlay
+          ? <>{districtOverlay}</>
+          : <>{desertMarkers}</>}
     </MapContainer>
   );
 };
