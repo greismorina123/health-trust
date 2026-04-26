@@ -52,7 +52,6 @@ const ThemeToggle = () => {
 
 const roleMeta: Record<Role, { label: string; icon: typeof User }> = {
   user: { label: "User", icon: User },
-  doctor: { label: "Doctor", icon: Stethoscope },
   ngo: { label: "NGO", icon: Building2 },
 };
 
