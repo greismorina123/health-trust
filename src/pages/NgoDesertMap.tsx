@@ -349,7 +349,7 @@ const RegionDetail = ({
 }) => {
   const band = bandForScore(region.riskScore);
   const gaps = region.capabilityGaps ?? [];
-  const followUps = followUpBulletsForGaps(gaps);
+  
   const hasCoords = Number.isFinite(region.lat) && Number.isFinite(region.lng);
   const siblings = clusterMembers.filter((m) => m.id !== region.id);
   const clusterSize = clusterMembers.length;
