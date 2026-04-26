@@ -11,6 +11,7 @@ import Signup from "./pages/Signup";
 import Search from "./pages/Search";
 import FacilityPage from "./pages/FacilityPage";
 import NgoDesertMap from "./pages/NgoDesertMap";
+import Methodology from "./pages/Methodology";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/facility/:id" element={<FacilityPage />} />
+              <Route path="/methodology" element={<Methodology />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

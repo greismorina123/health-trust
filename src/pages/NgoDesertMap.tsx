@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { Filter, MapPin, Loader2 } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { DesertMap } from "@/components/DesertMap";
@@ -445,7 +445,13 @@ const RegionDetail = ({
           Lower score = fewer trusted facilities per person.{" "}
           <span className="text-trust-low">0–30 critical</span>,{" "}
           <span className="text-trust-mid">31–60 underserved</span>,{" "}
-          <span className="text-trust-high">61–100 better</span>.
+          <span className="text-trust-high">61–100 better</span>.{" "}
+          <Link
+            to="/methodology#desert-score"
+            className="underline underline-offset-2 hover:text-foreground transition-colors"
+          >
+            How is this scored?
+          </Link>
         </p>
 
         {gaps.length > 0 && (

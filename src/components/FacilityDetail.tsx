@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AlertTriangle, ChevronDown, X } from "lucide-react";
 import {
   type Claim,
@@ -235,6 +236,12 @@ export const FacilityDetail = ({ facility, onClose, standalone }: Props) => {
             Confidence interval
           </p>
         </div>
+        <Link
+          to="/methodology"
+          className="mt-3 text-[11px] text-muted-foreground hover:text-primary underline underline-offset-2 transition-colors"
+        >
+          How is this scored?
+        </Link>
       </section>
 
       {/* Sub-Scores */}
