@@ -401,7 +401,7 @@ const RegionDetail = ({
               Average desert score:{" "}
               <span className="text-foreground font-medium">{avgScore} / 100</span>
             </p>
-            <ul className="mt-2 space-y-1">
+            <ul className="mt-2 space-y-1 max-h-64 overflow-y-auto pr-1">
               {clusterMembers.map((m) => {
                 const mBand = bandForScore(m.riskScore);
                 const isCurrent = m.id === region.id;
