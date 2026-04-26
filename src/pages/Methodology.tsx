@@ -376,8 +376,6 @@ Upper bound = overall_score + (width / 2)`}
             decisions.
           </p>
         </div>
-
-        <Disclaimer />
       </main>
     </div>
   );

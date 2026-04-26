@@ -314,8 +314,6 @@ const NgoDesertMap = () => {
             )
           )}
         </section>
-
-        <Disclaimer />
       </main>
     </div>
   );

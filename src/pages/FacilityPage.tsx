@@ -40,7 +40,7 @@ const FacilityPage = () => {
             <FacilityDetail facility={facility} standalone />
           </div>
         </div>
-        <Disclaimer />
+        
       </main>
     </div>
   );
