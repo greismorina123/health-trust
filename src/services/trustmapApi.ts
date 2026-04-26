@@ -474,6 +474,9 @@ export function desertRegionFromDistrict(d: DistrictDesertApi, index = 0): Deser
     contradictionsFound: [],
     recommendedFollowUp: followUpForGaps(d.top_capability_gaps),
     explanation: `${d.num_facilities} facilities serve ~${d.population.toLocaleString()} people. Average Trust Score: ${d.avg_trust_score}. Top gaps: ${d.top_capability_gaps.join(", ") || "—"}.`,
+    capabilityGaps: d.top_capability_gaps.map((g) => g.toLowerCase()),
+    numFacilities: d.num_facilities,
+    population: d.population,
     lat,
     lng,
   };
