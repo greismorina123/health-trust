@@ -34,9 +34,9 @@ const Login = () => {
       <Nav variant="landing" />
       <main className="px-6 pt-24">
         <div className="max-w-sm mx-auto fade-up">
-          <h1 className="text-xl font-semibold text-foreground">Sign in to CareMap</h1>
+          <h1 className="text-xl font-semibold text-foreground">Sign in to Health Trust</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Choose how you want to use CareMap.
+            Choose how you want to use Health Trust.
           </p>
 
           <form onSubmit={submit} className="mt-6 space-y-4">

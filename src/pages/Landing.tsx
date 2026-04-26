@@ -95,7 +95,7 @@ const Landing = () => {
                   Ask what kind of care you need
                 </h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  CareMap finds nearby facilities and checks whether their claims look reliable.
+                  Health Trust finds nearby facilities and checks whether their claims look reliable.
                 </p>
               </div>
             </div>

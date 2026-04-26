@@ -51,7 +51,7 @@ const Signup = () => {
       <main className="px-6 pt-24 pb-12">
         <div className="max-w-md mx-auto fade-up">
           <h1 className="text-2xl font-semibold text-foreground">Create your account</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Join CareMap India</p>
+          <p className="mt-1 text-sm text-muted-foreground">Join Health Trust</p>
 
           {/* Role selector */}
           <div className="mt-6 flex gap-2">
