@@ -160,7 +160,7 @@ const Landing = () => {
         </section>
 
         <footer className="mt-24 text-center text-xs text-muted-foreground/60">
-          MIT Hackathon 2025 · Powered by Databricks, Claude, Tavily
+          MIT Hackathon 2025 · Powered by Databricks
         </footer>
         <Disclaimer />
       </main>
