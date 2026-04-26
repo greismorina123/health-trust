@@ -7,6 +7,7 @@ import {
   type Facility,
   type Claim,
   type ClaimStatus,
+  type EvidenceSnippet,
   type SubScores,
 } from "@/data/facilities";
 import {
