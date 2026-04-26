@@ -10,7 +10,6 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Search from "./pages/Search";
 import FacilityPage from "./pages/FacilityPage";
-import DoctorReferral from "./pages/DoctorReferral";
 import NgoDesertMap from "./pages/NgoDesertMap";
 import NotFound from "./pages/NotFound";
 
