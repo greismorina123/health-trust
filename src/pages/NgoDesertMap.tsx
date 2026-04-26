@@ -143,15 +143,15 @@ const NgoDesertMap = () => {
             <span className="text-xs uppercase tracking-wider text-muted-foreground">Filters</span>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            <FilterField label="Capability">
+            <FilterField label="Capability gap">
               <select
                 value={capability}
-                onChange={(e) => setCapability(e.target.value as CapabilityKey | "all")}
+                onChange={(e) => setCapability(e.target.value as GapKey | "all")}
                 className="w-full h-9 px-2.5 rounded-lg bg-background border border-border-subtle text-xs text-foreground outline-none focus:border-primary/50"
               >
                 <option value="all">All capabilities</option>
-                {capabilityFilters.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                {capabilityOptions.map((c) => (
+                  <option key={c} value={c}>{titleCase(c)}</option>
                 ))}
               </select>
             </FilterField>
@@ -167,25 +167,36 @@ const NgoDesertMap = () => {
                 ))}
               </select>
             </FilterField>
-            <FilterField label={`Trust Score ≤ ${trustThreshold || "—"}`}>
+            <FilterField label={`Max avg trust ${maxTrust}`}>
               <input
                 type="range"
                 min={0}
                 max={100}
                 step={5}
-                value={trustThreshold}
-                onChange={(e) => setTrustThreshold(Number(e.target.value))}
+                value={maxTrust}
+                onChange={(e) => setMaxTrust(Number(e.target.value))}
                 className="w-full accent-[hsl(var(--primary))]"
               />
             </FilterField>
-            <FilterField label={`Min completeness ${minCompleteness}%`}>
+            <FilterField label={`Min desert score ${minRisk}`}>
               <input
                 type="range"
                 min={0}
                 max={100}
                 step={5}
-                value={minCompleteness}
-                onChange={(e) => setMinCompleteness(Number(e.target.value))}
+                value={minRisk}
+                onChange={(e) => setMinRisk(Number(e.target.value))}
+                className="w-full accent-[hsl(var(--primary))]"
+              />
+            </FilterField>
+            <FilterField label={`Min facilities ${minFacilities}`}>
+              <input
+                type="range"
+                min={0}
+                max={20}
+                step={1}
+                value={minFacilities}
+                onChange={(e) => setMinFacilities(Number(e.target.value))}
                 className="w-full accent-[hsl(var(--primary))]"
               />
             </FilterField>
