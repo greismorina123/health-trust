@@ -1,5 +1,5 @@
-import { Link, useNavigate } from "react-router-dom";
-import { MapPin, Moon, Sun, ChevronDown, User, Building2 } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { MapPin, Moon, Sun, ChevronDown, User, Building2, Search as SearchIcon, Map as MapIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { dashboardPathFor, useRole, type Role } from "@/context/RoleContext";
@@ -118,6 +118,42 @@ const RoleSwitcher = () => {
   );
 };
 
+const RoleNavLinks = () => {
+  const { role } = useRole();
+  const { pathname } = useLocation();
+
+  const links =
+    role === "ngo"
+      ? [
+          { to: "/ngo", label: "Map", icon: MapIcon },
+          { to: "/search", label: "Search", icon: SearchIcon },
+        ]
+      : [{ to: "/search", label: "Search", icon: SearchIcon }];
+
+  return (
+    <nav className="hidden sm:flex items-center gap-1 mr-1">
+      {links.map(({ to, label, icon: Icon }) => {
+        const active = pathname === to;
+        return (
+          <Link
+            key={to}
+            to={to}
+            className={cn(
+              "h-7 px-2.5 inline-flex items-center gap-1.5 rounded-full text-xs border transition-colors",
+              active
+                ? "bg-primary/10 border-primary/30 text-foreground"
+                : "bg-panel-elevated border-border-subtle text-muted-foreground hover:text-foreground hover:border-primary/30",
+            )}
+          >
+            <Icon className="h-3 w-3" />
+            <span className="font-medium">{label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+};
+
 export const Nav = ({ variant = "app" }: Props) => {
   return (
     <header className="fixed top-0 left-0 right-0 h-12 z-50 bg-background/80 backdrop-blur-sm border-b border-border-subtle">
@@ -139,6 +175,7 @@ export const Nav = ({ variant = "app" }: Props) => {
           </div>
         ) : (
           <div className="flex items-center gap-2">
+            <RoleNavLinks />
             <BackendStatusDot />
             <RoleSwitcher />
             <ThemeToggle />

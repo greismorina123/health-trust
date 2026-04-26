@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { Filter, MapPin, Loader2 } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { DesertMap } from "@/components/DesertMap";
 import { Disclaimer } from "@/components/Disclaimer";
+import { useRole } from "@/context/RoleContext";
 import {
   type DesertRegion,
   desertRegions as fallbackDesertRegions,
@@ -59,6 +61,7 @@ const SCORE_OPTIONS: { label: string; value: string }[] = [
 ];
 
 const NgoDesertMap = () => {
+  const { role } = useRole();
   const [gap, setGap] = useState<string>("all");
   const [stateFilter, setStateFilter] = useState<string>("all");
   const [scoreBand, setScoreBand] = useState<string>("all");
@@ -121,6 +124,8 @@ const NgoDesertMap = () => {
     () => (selectedId ? filtered.find((r) => r.id === selectedId) ?? null : null),
     [filtered, selectedId],
   );
+
+  if (role !== "ngo") return <Navigate to="/search" replace />;
 
   return (
     <div className="min-h-screen bg-background">
