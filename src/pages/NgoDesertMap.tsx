@@ -364,10 +364,9 @@ const Stat = ({ label, value }: { label: string; value: string }) => (
 );
 
 const formatPop = (n: number): string => {
-  if (n >= 10_000_000) return `${(n / 10_000_000).toFixed(1)}cr`;
-  if (n >= 100_000) return `${(n / 100_000).toFixed(1)}L`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}k`;
-  return n.toLocaleString();
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M people`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K people`;
+  return `${n.toLocaleString()} people`;
 };
 
 export default NgoDesertMap;
