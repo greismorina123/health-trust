@@ -13,6 +13,7 @@ import FacilityPage from "./pages/FacilityPage";
 import NgoDesertMap from "./pages/NgoDesertMap";
 import Methodology from "./pages/Methodology";
 import NotFound from "./pages/NotFound";
+import { Disclaimer } from "@/components/Disclaimer";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
               <Route path="/methodology" element={<Methodology />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <Disclaimer />
           </BrowserRouter>
         </TooltipProvider>
       </RoleProvider>
