@@ -125,6 +125,17 @@ const NgoDesertMap = () => {
     [filtered, selectedId],
   );
 
+  // All districts in the same ~1km bucket as the selected one (matches map clustering).
+  const clusterMembers = useMemo(() => {
+    if (!selected) return [];
+    const bucket = (n: number) => Math.round(n / 0.01);
+    const lat = bucket(selected.lat);
+    const lng = bucket(selected.lng);
+    return filtered.filter(
+      (r) => bucket(r.lat) === lat && bucket(r.lng) === lng,
+    );
+  }, [filtered, selected]);
+
   if (role !== "ngo") return <Navigate to="/search" replace />;
 
   return (
@@ -218,7 +229,12 @@ const NgoDesertMap = () => {
           </div>
 
           {selected && (
-            <RegionDetail region={selected} onClose={() => setSelectedId(null)} />
+            <RegionDetail
+              region={selected}
+              clusterMembers={clusterMembers}
+              onSelectMember={(id) => setSelectedId(id)}
+              onClose={() => setSelectedId(null)}
+            />
           )}
         </div>
 
@@ -320,16 +336,36 @@ const FilterField = ({
   </div>
 );
 
-const RegionDetail = ({ region, onClose }: { region: DesertRegion; onClose?: () => void }) => {
+const RegionDetail = ({
+  region,
+  clusterMembers = [],
+  onSelectMember,
+  onClose,
+}: {
+  region: DesertRegion;
+  clusterMembers?: DesertRegion[];
+  onSelectMember?: (id: string) => void;
+  onClose?: () => void;
+}) => {
   const band = bandForScore(region.riskScore);
   const gaps = region.capabilityGaps ?? [];
   const followUps = followUpBulletsForGaps(gaps);
   const hasCoords = Number.isFinite(region.lat) && Number.isFinite(region.lng);
+  const siblings = clusterMembers.filter((m) => m.id !== region.id);
+  const clusterSize = clusterMembers.length;
+  const avgScore =
+    clusterSize > 1
+      ? Math.round(
+          clusterMembers.reduce((sum, m) => sum + m.riskScore, 0) / clusterSize,
+        )
+      : null;
 
   return (
     <aside className="rounded-xl border border-border-subtle bg-panel overflow-hidden flex flex-col">
       <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between gap-2">
-        <span className="text-xs uppercase tracking-wider text-muted-foreground">Selected district</span>
+        <span className="text-xs uppercase tracking-wider text-muted-foreground">
+          {clusterSize > 1 ? `${clusterSize} districts at this point` : "Selected district"}
+        </span>
         <div className="flex items-center gap-2">
           <span className={cn("text-[11px] font-medium rounded-md px-1.5 py-0.5 border", BAND_BADGE[band])}>
             {BAND_LABEL[band]}
@@ -355,6 +391,52 @@ const RegionDetail = ({ region, onClose }: { region: DesertRegion; onClose?: () 
             {!hasCoords && <span className="ml-1 italic">· no map location</span>}
           </p>
         </div>
+
+        {avgScore !== null && (
+          <div className="rounded-lg border border-border-subtle bg-background/40 p-3">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              All districts at this location
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Average desert score:{" "}
+              <span className="text-foreground font-medium">{avgScore} / 100</span>
+            </p>
+            <ul className="mt-2 space-y-1">
+              {clusterMembers.map((m) => {
+                const mBand = bandForScore(m.riskScore);
+                const isCurrent = m.id === region.id;
+                return (
+                  <li key={m.id}>
+                    <button
+                      type="button"
+                      onClick={() => onSelectMember?.(m.id)}
+                      className={cn(
+                        "w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-md text-left text-xs transition-colors",
+                        isCurrent
+                          ? "bg-panel-elevated text-foreground"
+                          : "hover:bg-panel-elevated/60 text-foreground/85",
+                      )}
+                    >
+                      <span className="flex items-center gap-2 min-w-0">
+                        <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", BAND_DOT[mBand])} />
+                        <span className="truncate">{m.district}</span>
+                      </span>
+                      <span className={cn("text-[10px] font-medium rounded-md px-1.5 py-0.5 border shrink-0", BAND_BADGE[mBand])}>
+                        {m.riskScore}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            {siblings.length > 0 && (
+              <p className="mt-2 text-[10px] text-muted-foreground">
+                Showing details for{" "}
+                <span className="text-foreground">{region.district}</span>. Click another to switch.
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           <Stat label="Desert score" value={`${region.riskScore} / 100`} />
