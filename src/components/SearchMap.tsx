@@ -59,7 +59,7 @@ const severityStyle: Record<DesertZone["severity"], { color: string; radius: num
 interface Props {
   mode: "facilities" | "deserts";
   selectedId: string | null;
-  /** IDs of facilities that are search results (get a white ring). */
+  /** IDs of facilities that are search results (get a white ring + pulse). */
   resultIds: string[];
   onSelectFacility: (f: Facility) => void;
   onSelectDesert: (d: DesertZone, screenPos: { x: number; y: number }) => void;
@@ -68,6 +68,12 @@ interface Props {
   fitBounds: Array<[number, number]> | null;
   /** Optional override list of facilities (e.g., live API pins). Falls back to mock. */
   facilityList?: Facility[];
+  /** When true, non-result facility pins are dimmed. */
+  dimNonResults?: boolean;
+  /** Live district overlay (used when mode === "deserts" and provided). */
+  districtList?: DistrictOverlayItem[];
+  /** Click handler for live district overlay items. */
+  onSelectDistrict?: (d: DistrictOverlayItem) => void;
 }
 
 const MapController = ({
