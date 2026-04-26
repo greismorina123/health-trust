@@ -7,7 +7,6 @@ import { Disclaimer } from "@/components/Disclaimer";
 const exampleChips = [
   "Emergency & ICU near Delhi",
   "Maternity hospital in Mumbai",
-  "Cancer care gaps in India",
   "24/7 hospitals in Bangalore",
 ];
 
