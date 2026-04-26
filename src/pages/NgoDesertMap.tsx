@@ -466,17 +466,6 @@ const RegionDetail = ({
           </p>
         </div>
 
-        <div>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Recommended follow-up</p>
-          <ul className="mt-1.5 space-y-1.5">
-            {followUps.map((f) => (
-              <li key={f} className="text-xs text-foreground/85 leading-relaxed flex gap-1.5">
-                <span className="text-primary mt-0.5">•</span>
-                <span>{f}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
       </div>
     </aside>
   );
