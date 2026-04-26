@@ -41,10 +41,10 @@ const trustBadgeClass = (score: number) => {
 };
 
 const EXAMPLE_CHIPS = [
-  "Suspicious dental clinics in India",
-  "Emergency C-section in rural Maharashtra",
-  "Worst dialysis deserts in India",
-  "Multi-specialty hospitals that look too good to be true",
+  "I need a hospital with emergency and ICU near Delhi",
+  "Find a maternity hospital for normal delivery in Mumbai",
+  "Which areas in India have no cancer treatment available?",
+  "Are there any trustworthy 24/7 hospitals in Bangalore?",
 ];
 
 type MapMode = "facilities" | "deserts";
