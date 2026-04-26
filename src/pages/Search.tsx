@@ -184,7 +184,8 @@ const Search = () => {
 
   const ci = queryResponse?.confidence_interval;
 
-  if (role !== "user") return <Navigate to={dashboardPathFor(role)} replace />;
+  // Both Users and NGOs can access /search. NGOs land on /ngo by default
+  // and use the nav "Search" link to come here.
 
   const mapFacilities = submittedQuery && results.length ? results : pins;
   const mapResultIds = submittedQuery ? results.map((r) => r.id) : [];
