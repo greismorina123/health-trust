@@ -44,7 +44,7 @@ const NgoDesertMap = () => {
           sample: districts[0],
         });
         const mapped = districts
-          .map(desertRegionFromDistrict)
+          .map((d, i) => desertRegionFromDistrict(d, i))
           .sort((a, b) => b.riskScore - a.riskScore);
         console.info("[NgoDesertMap] mapped regions", {
           count: mapped.length,
