@@ -441,6 +441,12 @@ const RegionDetail = ({
           <Stat label="Desert score" value={`${region.riskScore} / 100`} />
           <Stat label="Population" value={formatPop(region.population ?? 0)} />
         </div>
+        <p className="text-[11px] text-muted-foreground leading-relaxed -mt-1">
+          Lower score = fewer trusted facilities per person.{" "}
+          <span className="text-trust-low">0–30 critical</span>,{" "}
+          <span className="text-trust-mid">31–60 underserved</span>,{" "}
+          <span className="text-trust-high">61–100 better</span>.
+        </p>
 
         {gaps.length > 0 && (
           <div>
