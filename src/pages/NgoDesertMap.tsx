@@ -62,7 +62,7 @@ const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const NgoDesertMap = () => {
   const [gap, setGap] = useState<string>("all");
   const [regions, setRegions] = useState<DesertRegion[]>(fallbackDesertRegions);
-  const [selectedId, setSelectedId] = useState<string>(fallbackDesertRegions[0].id);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [usingFallback, setUsingFallback] = useState(false);
 
@@ -78,7 +78,6 @@ const NgoDesertMap = () => {
           .sort((a, b) => a.riskScore - b.riskScore);
         if (mapped.length > 0) {
           setRegions(mapped);
-          setSelectedId(mapped[0].id);
           setUsingFallback(false);
         } else {
           setUsingFallback(true);
@@ -100,16 +99,15 @@ const NgoDesertMap = () => {
     return regions.filter((r) => (r.capabilityGaps ?? []).includes(gap));
   }, [regions, gap]);
 
-  // Keep selection valid as filters change.
+  // Clear selection if it no longer matches the current filter.
   useEffect(() => {
-    if (filtered.length === 0) return;
-    if (!filtered.find((r) => r.id === selectedId)) {
-      setSelectedId(filtered[0].id);
+    if (selectedId && !filtered.find((r) => r.id === selectedId)) {
+      setSelectedId(null);
     }
   }, [filtered, selectedId]);
 
   const selected = useMemo(
-    () => filtered.find((r) => r.id === selectedId) ?? filtered[0] ?? null,
+    () => (selectedId ? filtered.find((r) => r.id === selectedId) ?? null : null),
     [filtered, selectedId],
   );
 
