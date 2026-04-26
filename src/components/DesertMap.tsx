@@ -38,10 +38,50 @@ const FlyController = ({ target }: { target: DesertRegion | null }) => {
   return null;
 };
 
+// Round coordinates to ~1km bucket so districts at the same point are merged.
+const COORD_BUCKET = 0.01;
+const bucketKey = (lat: number, lng: number) =>
+  `${Math.round(lat / COORD_BUCKET)}:${Math.round(lng / COORD_BUCKET)}`;
+
+interface ClusteredMarker {
+  key: string;
+  lat: number;
+  lng: number;
+  avgScore: number;
+  members: DesertRegion[];
+  primary: DesertRegion; // worst-scored district at this point
+}
+
+const clusterByCoord = (regions: DesertRegion[]): ClusteredMarker[] => {
+  const groups = new Map<string, DesertRegion[]>();
+  regions.forEach((r) => {
+    const k = bucketKey(r.lat, r.lng);
+    const arr = groups.get(k) ?? [];
+    arr.push(r);
+    groups.set(k, arr);
+  });
+  return Array.from(groups.entries()).map(([key, members]) => {
+    const avgScore = Math.round(
+      members.reduce((sum, m) => sum + m.riskScore, 0) / members.length,
+    );
+    // "primary" = worst (lowest) score, used as the canonical region for selection.
+    const primary = [...members].sort((a, b) => a.riskScore - b.riskScore)[0];
+    return {
+      key,
+      lat: primary.lat,
+      lng: primary.lng,
+      avgScore,
+      members,
+      primary,
+    };
+  });
+};
+
 export const DesertMap = ({ regions, selectedId, onSelect }: Props) => {
   const mapRef = useRef<LeafletMap | null>(null);
   const { theme } = useTheme();
   const plotted = useMemo(() => regions.filter(hasCoords), [regions]);
+  const clusters = useMemo(() => clusterByCoord(plotted), [plotted]);
   const target = useMemo(
     () => plotted.find((r) => r.id === selectedId) ?? null,
     [plotted, selectedId],
