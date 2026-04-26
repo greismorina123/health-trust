@@ -11,11 +11,16 @@ const INDIA_BOUNDS: LatLngBoundsExpression = [
   [37, 100],
 ];
 
-const riskStyle = (r: DesertRegion) => {
-  if (r.riskLevel === "high") return { color: "hsl(0 74% 50%)", radius: 28, fill: 0.18 };
-  if (r.riskLevel === "medium") return { color: "hsl(21 90% 54%)", radius: 22, fill: 0.14 };
-  return { color: "hsl(142 71% 45%)", radius: 16, fill: 0.1 };
+// Per current product spec: LOWER desert_score = WORSE coverage.
+//   0–30 critical (red), 31–60 underserved (amber), 61–100 better served (green).
+const styleForScore = (score: number) => {
+  if (score <= 30) return { color: "hsl(0 74% 55%)", radius: 14, fill: 0.35 };
+  if (score <= 60) return { color: "hsl(36 94% 56%)", radius: 11, fill: 0.28 };
+  return { color: "hsl(142 71% 45%)", radius: 9, fill: 0.22 };
 };
+
+const hasCoords = (r: DesertRegion) =>
+  Number.isFinite(r.lat) && Number.isFinite(r.lng);
 
 interface Props {
   regions: DesertRegion[];
@@ -26,7 +31,9 @@ interface Props {
 const FlyController = ({ target }: { target: DesertRegion | null }) => {
   const map = useMap();
   useEffect(() => {
-    if (target) map.flyTo([target.lat, target.lng], 7, { duration: 0.7 });
+    if (target && hasCoords(target)) {
+      map.flyTo([target.lat, target.lng], 7, { duration: 0.7 });
+    }
   }, [target, map]);
   return null;
 };
@@ -34,17 +41,20 @@ const FlyController = ({ target }: { target: DesertRegion | null }) => {
 export const DesertMap = ({ regions, selectedId, onSelect }: Props) => {
   const mapRef = useRef<LeafletMap | null>(null);
   const { theme } = useTheme();
-  const target = useMemo(() => regions.find((r) => r.id === selectedId) ?? null, [regions, selectedId]);
+  const plotted = useMemo(() => regions.filter(hasCoords), [regions]);
+  const target = useMemo(
+    () => plotted.find((r) => r.id === selectedId) ?? null,
+    [plotted, selectedId],
+  );
 
   // Fit to all visible regions on filter change.
   useEffect(() => {
-    if (!mapRef.current || regions.length === 0) return;
-    const bounds = L.latLngBounds(regions.map((r) => L.latLng(r.lat, r.lng)));
+    if (!mapRef.current || plotted.length === 0) return;
+    const bounds = L.latLngBounds(plotted.map((r) => L.latLng(r.lat, r.lng)));
     mapRef.current.flyToBounds(bounds, { padding: [50, 50], duration: 0.6, maxZoom: 6 });
-  }, [regions]);
+  }, [plotted]);
 
-  // Invalidate Leaflet's cached size whenever the container resizes
-  // (e.g. when a sibling panel collapses and the map suddenly gets wider).
+  // Invalidate Leaflet's cached size whenever the container resizes.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -88,20 +98,20 @@ export const DesertMap = ({ regions, selectedId, onSelect }: Props) => {
         subdomains={["a", "b", "c", "d"]}
       />
       <FlyController target={target} />
-      {regions.map((r) => {
-        const s = riskStyle(r);
+      {plotted.map((r) => {
+        const s = styleForScore(r.riskScore);
         const isSelected = r.id === selectedId;
         return (
           <CircleMarker
             key={r.id}
             center={[r.lat, r.lng]}
-            radius={s.radius}
+            radius={isSelected ? s.radius + 4 : s.radius}
             pathOptions={{
               color: s.color,
               fillColor: s.color,
-              fillOpacity: s.fill,
-              weight: isSelected ? 2.5 : 1,
-              opacity: isSelected ? 0.9 : 0.5,
+              fillOpacity: isSelected ? Math.min(0.5, s.fill + 0.15) : s.fill,
+              weight: isSelected ? 3 : 1,
+              opacity: isSelected ? 1 : 0.7,
             }}
             eventHandlers={{ click: () => onSelect(r) }}
           >
@@ -110,7 +120,7 @@ export const DesertMap = ({ regions, selectedId, onSelect }: Props) => {
                 <strong style={{ fontSize: "13px" }}>{r.areaName}</strong>
                 <br />
                 <span style={{ fontSize: "12px", opacity: 0.85 }}>
-                  {r.missingCapability} · risk {r.riskScore}
+                  {r.state} · score {r.riskScore}
                 </span>
               </span>
             </Tooltip>
