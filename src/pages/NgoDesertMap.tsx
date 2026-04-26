@@ -11,7 +11,6 @@ import {
 } from "@/data/roleData";
 import {
   desertRegionFromDistrict,
-  followUpBulletsForGaps,
   getDistricts,
 } from "@/services/trustmapApi";
 import { cn } from "@/lib/utils";
