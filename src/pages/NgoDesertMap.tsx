@@ -362,8 +362,20 @@ const RegionDetail = ({ region, onCollapse }: { region: DesertRegion; onCollapse
       </div>
 
       <div>
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Missing capability</p>
-        <p className="text-sm font-medium text-trust-low mt-0.5">{region.missingCapability}</p>
+        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Capability gaps</p>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          {(region.capabilityGaps && region.capabilityGaps.length > 0
+            ? region.capabilityGaps
+            : [String(region.missingCapability).toLowerCase()]
+          ).map((g) => (
+            <span
+              key={g}
+              className="inline-flex items-center rounded-md border border-trust-low/30 bg-trust-low/10 text-trust-low px-2 py-0.5 text-[11px] font-medium"
+            >
+              {g.charAt(0).toUpperCase() + g.slice(1)}
+            </span>
+          ))}
+        </div>
       </div>
 
       <div>
