@@ -233,27 +233,6 @@ const NgoDesertMap = () => {
   );
 };
 
-const SummaryCard = ({
-  icon,
-  label,
-  value,
-  hint,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  hint?: string;
-}) => (
-  <div className="rounded-xl border border-border-subtle bg-panel p-3.5">
-    <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-      {icon}
-      {label}
-    </div>
-    <div className="mt-1.5 text-xl font-semibold text-foreground">{value}</div>
-    {hint && <div className="text-[10px] text-muted-foreground mt-0.5">{hint}</div>}
-  </div>
-);
-
 const LegendDot = ({ color, label }: { color: string; label: string }) => (
   <span className="flex items-center gap-1.5">
     <span className={cn("h-2 w-2 rounded-full", color)} />
