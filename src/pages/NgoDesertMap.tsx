@@ -292,6 +292,29 @@ const LegendDot = ({ color, label }: { color: string; label: string }) => (
   </span>
 );
 
+const FilterField = ({
+  id,
+  label,
+  icon,
+  children,
+}: {
+  id: string;
+  label: string;
+  icon?: boolean;
+  children: React.ReactNode;
+}) => (
+  <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+    <label
+      htmlFor={id}
+      className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground"
+    >
+      {icon && <Filter className="h-3 w-3" />}
+      {label}
+    </label>
+    {children}
+  </div>
+);
+
 const RegionDetail = ({ region, onClose }: { region: DesertRegion; onClose?: () => void }) => {
   const band = bandForScore(region.riskScore);
   const gaps = region.capabilityGaps ?? [];
