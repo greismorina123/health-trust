@@ -38,10 +38,48 @@ const FlyController = ({ target }: { target: DesertRegion | null }) => {
   return null;
 };
 
+// Spread out districts that share (nearly) identical coordinates so their
+// circles don't visually stack and look like double rings.
+// Districts within ~5km are grouped and arranged on a small ring around the
+// shared centroid. Single districts are returned unchanged.
+const COLLISION_EPS_DEG = 0.05; // ~5km — coarse cluster bucket
+const SPREAD_RADIUS_DEG = 0.18; // ~20km offset ring
+
+const spreadOverlapping = (regions: DesertRegion[]): DesertRegion[] => {
+  const buckets = new Map<string, DesertRegion[]>();
+  regions.forEach((r) => {
+    const key = `${Math.round(r.lat / COLLISION_EPS_DEG)}:${Math.round(r.lng / COLLISION_EPS_DEG)}`;
+    const arr = buckets.get(key) ?? [];
+    arr.push(r);
+    buckets.set(key, arr);
+  });
+  const out: DesertRegion[] = [];
+  buckets.forEach((group) => {
+    if (group.length === 1) {
+      out.push(group[0]);
+      return;
+    }
+    // Stable order so nudges are deterministic across renders.
+    const sorted = [...group].sort((a, b) => a.id.localeCompare(b.id));
+    sorted.forEach((r, i) => {
+      const angle = (2 * Math.PI * i) / sorted.length;
+      out.push({
+        ...r,
+        lat: r.lat + Math.sin(angle) * SPREAD_RADIUS_DEG,
+        lng: r.lng + Math.cos(angle) * SPREAD_RADIUS_DEG,
+      });
+    });
+  });
+  return out;
+};
+
 export const DesertMap = ({ regions, selectedId, onSelect }: Props) => {
   const mapRef = useRef<LeafletMap | null>(null);
   const { theme } = useTheme();
-  const plotted = useMemo(() => regions.filter(hasCoords), [regions]);
+  const plotted = useMemo(
+    () => spreadOverlapping(regions.filter(hasCoords)),
+    [regions],
+  );
   const target = useMemo(
     () => plotted.find((r) => r.id === selectedId) ?? null,
     [plotted, selectedId],
