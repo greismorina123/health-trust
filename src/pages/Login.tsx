@@ -65,7 +65,17 @@ const Login = () => {
             </button>
           </form>
 
-          <p className="mt-4 text-xs text-muted-foreground/70 text-center">
+          <p className="mt-4 text-sm text-muted-foreground text-center">
+            Don't have an account?{" "}
+            <Link
+              to={role ? `/signup?role=${role}` : "/signup"}
+              className="text-primary font-medium hover:underline"
+            >
+              Sign up
+            </Link>
+          </p>
+
+          <p className="mt-2 text-xs text-muted-foreground/70 text-center">
             Demo only — no credentials required.
           </p>
         </div>
