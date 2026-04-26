@@ -49,11 +49,18 @@ export const DesertMap = ({ regions, selectedId, onSelect }: Props) => {
     const map = mapRef.current;
     if (!map) return;
     const container = map.getContainer();
+    let raf = 0;
     const ro = new ResizeObserver(() => {
-      map.invalidateSize();
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        map.invalidateSize({ animate: false, pan: false });
+      });
     });
     ro.observe(container);
-    return () => ro.disconnect();
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
   }, []);
 
   return (
