@@ -103,9 +103,6 @@ const NgoDesertMap = () => {
     [filtered, selectedId],
   );
 
-  // Summary metric (kept only if needed elsewhere — currently no header cards).
-  void filtered;
-
   return (
     <div className="min-h-screen bg-background">
       <Nav variant="app" />
