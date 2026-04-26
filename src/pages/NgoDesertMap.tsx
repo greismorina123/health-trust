@@ -68,6 +68,7 @@ const NgoDesertMap = () => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [usingFallback, setUsingFallback] = useState(false);
+  const [highRiskCollapsed, setHighRiskCollapsed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
