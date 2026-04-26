@@ -461,7 +461,45 @@ const RegionDetail = ({
         <div>
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Why this area is risky</p>
           <p className="mt-1 text-xs text-foreground/85 leading-relaxed">
-            This district has weak trusted coverage for the selected care gap. Existing facilities may be too few, too low-trust, or missing reliable capability evidence.
+            {(() => {
+              const reasons: string[] = [];
+              const nf = region.numFacilities ?? 0;
+              const pop = region.population ?? 0;
+              const trust = region.averageTrustScore ?? 0;
+              const score = region.riskScore;
+
+              if (nf === 0) {
+                reasons.push("no known facilities are mapped here");
+              } else if (pop > 0) {
+                const perHundredK = (nf / pop) * 100_000;
+                if (perHundredK < 1) {
+                  reasons.push(`only ${nf} facility${nf === 1 ? "" : "ies"} for ~${formatPop(pop)} people (${perHundredK.toFixed(2)} per 100k)`);
+                } else {
+                  reasons.push(`${nf} facility${nf === 1 ? "" : "ies"} for ~${formatPop(pop)} people`);
+                }
+              } else {
+                reasons.push(`${nf} known facility${nf === 1 ? "" : "ies"}`);
+              }
+
+              if (trust > 0 && trust < 50) {
+                reasons.push(`average Trust Score is low (${trust})`);
+              } else if (trust > 0) {
+                reasons.push(`average Trust Score is ${trust}`);
+              }
+
+              if (gaps.length > 0) {
+                reasons.push(`weakest in ${gaps.slice(0, 2).map(titleCase).join(" and ")}`);
+              }
+
+              const verdict =
+                score <= 30
+                  ? "Critical care desert"
+                  : score <= 60
+                    ? "Underserved area"
+                    : "Better-served area";
+
+              return `${verdict} (score ${score}/100): ${reasons.join("; ")}.`;
+            })()}
           </p>
         </div>
 
