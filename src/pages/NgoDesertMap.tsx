@@ -229,7 +229,12 @@ const NgoDesertMap = () => {
           </div>
 
           {selected && (
-            <RegionDetail region={selected} onClose={() => setSelectedId(null)} />
+            <RegionDetail
+              region={selected}
+              clusterMembers={clusterMembers}
+              onSelectMember={(id) => setSelectedId(id)}
+              onClose={() => setSelectedId(null)}
+            />
           )}
         </div>
 
