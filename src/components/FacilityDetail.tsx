@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, ChevronDown, Globe, X } from "lucide-react";
+import { AlertTriangle, ChevronDown, X } from "lucide-react";
 import {
   type Claim,
   type ClaimStatus,
@@ -376,24 +376,6 @@ export const FacilityDetail = ({ facility, onClose, standalone }: Props) => {
         <p className="text-sm text-muted-foreground italic mt-1">{facility.summary}</p>
       </section>
 
-      {/* Web Verification */}
-      <section className="p-4 border-t border-border-subtle flex items-center gap-2">
-        <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-        {facility.web_verification.status === "confirmed" && (
-          <span className="text-xs text-trust-high">
-            Verified on {facility.web_verification.source}
-          </span>
-        )}
-        {facility.web_verification.status === "found" && (
-          <span className="text-xs text-trust-mid">
-            Found on {facility.web_verification.source}
-          </span>
-        )}
-        {facility.web_verification.status === "not_found" && (
-          <span className="text-xs text-trust-low">No web presence found</span>
-        )}
-        <span className="text-xs text-muted-foreground ml-auto">via Tavily</span>
-      </section>
     </div>
   );
 };
