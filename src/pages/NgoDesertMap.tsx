@@ -51,8 +51,17 @@ const BAND_DOT: Record<RiskBand, string> = {
 
 const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+const SCORE_OPTIONS: { label: string; value: string }[] = [
+  { label: "Any score", value: "all" },
+  { label: "Critical (0–30)", value: "critical" },
+  { label: "Underserved (31–60)", value: "underserved" },
+  { label: "Better served (61–100)", value: "better" },
+];
+
 const NgoDesertMap = () => {
   const [gap, setGap] = useState<string>("all");
+  const [stateFilter, setStateFilter] = useState<string>("all");
+  const [scoreBand, setScoreBand] = useState<string>("all");
   const [regions, setRegions] = useState<DesertRegion[]>(fallbackDesertRegions);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -86,10 +95,20 @@ const NgoDesertMap = () => {
     };
   }, []);
 
+  const states = useMemo(() => {
+    const set = new Set<string>();
+    regions.forEach((r) => r.state && set.add(r.state));
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [regions]);
+
   const filtered = useMemo(() => {
-    if (gap === "all") return regions;
-    return regions.filter((r) => (r.capabilityGaps ?? []).includes(gap));
-  }, [regions, gap]);
+    return regions.filter((r) => {
+      if (gap !== "all" && !(r.capabilityGaps ?? []).includes(gap)) return false;
+      if (stateFilter !== "all" && r.state !== stateFilter) return false;
+      if (scoreBand !== "all" && bandForScore(r.riskScore) !== scoreBand) return false;
+      return true;
+    });
+  }, [regions, gap, stateFilter, scoreBand]);
 
   // Clear selection if it no longer matches the current filter.
   useEffect(() => {
@@ -115,25 +134,58 @@ const NgoDesertMap = () => {
               Backend unavailable — showing cached fallback data.
             </p>
           )}
-          <div className="rounded-xl border border-border-subtle bg-panel p-3.5 flex flex-col sm:flex-row sm:items-center gap-3">
-            <label
-              htmlFor="gap-filter"
-              className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground shrink-0"
-            >
-              <Filter className="h-3 w-3" />
-              View desert risk for
-            </label>
-            <select
-              id="gap-filter"
-              value={gap}
-              onChange={(e) => setGap(e.target.value)}
-              className="w-full sm:max-w-xs h-10 px-3 rounded-lg bg-background border border-border-subtle text-sm text-foreground outline-none focus:border-primary/50"
-            >
-              {GAP_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-            <span className="sm:ml-auto text-[11px] text-muted-foreground">
+          <div className="rounded-xl border border-border-subtle bg-panel p-3.5 flex flex-col lg:flex-row lg:items-end gap-3">
+            <FilterField id="gap-filter" label="Care gap" icon>
+              <select
+                id="gap-filter"
+                value={gap}
+                onChange={(e) => setGap(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg bg-background border border-border-subtle text-sm text-foreground outline-none focus:border-primary/50"
+              >
+                {GAP_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </FilterField>
+
+            <FilterField id="state-filter" label="Area / state">
+              <select
+                id="state-filter"
+                value={stateFilter}
+                onChange={(e) => setStateFilter(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg bg-background border border-border-subtle text-sm text-foreground outline-none focus:border-primary/50"
+              >
+                <option value="all">All states</option>
+                {states.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </FilterField>
+
+            <FilterField id="score-filter" label="Risk score">
+              <select
+                id="score-filter"
+                value={scoreBand}
+                onChange={(e) => setScoreBand(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg bg-background border border-border-subtle text-sm text-foreground outline-none focus:border-primary/50"
+              >
+                {SCORE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </FilterField>
+
+            {(gap !== "all" || stateFilter !== "all" || scoreBand !== "all") && (
+              <button
+                type="button"
+                onClick={() => { setGap("all"); setStateFilter("all"); setScoreBand("all"); }}
+                className="h-10 px-3 rounded-lg border border-border-subtle bg-background text-xs text-muted-foreground hover:text-foreground hover:bg-panel-elevated transition-colors shrink-0"
+              >
+                Reset
+              </button>
+            )}
+
+            <span className="lg:ml-auto text-[11px] text-muted-foreground shrink-0">
               {isLoading ? "Loading…" : `${filtered.length} districts shown`}
             </span>
           </div>
@@ -238,6 +290,29 @@ const LegendDot = ({ color, label }: { color: string; label: string }) => (
     <span className={cn("h-2 w-2 rounded-full", color)} />
     {label}
   </span>
+);
+
+const FilterField = ({
+  id,
+  label,
+  icon,
+  children,
+}: {
+  id: string;
+  label: string;
+  icon?: boolean;
+  children: React.ReactNode;
+}) => (
+  <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+    <label
+      htmlFor={id}
+      className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground"
+    >
+      {icon && <Filter className="h-3 w-3" />}
+      {label}
+    </label>
+    {children}
+  </div>
 );
 
 const RegionDetail = ({ region, onClose }: { region: DesertRegion; onClose?: () => void }) => {
