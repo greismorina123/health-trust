@@ -451,11 +451,14 @@ export const coordsForDistrict = (
   return [22.0, 79.0];
 };
 
-export function desertRegionFromDistrict(d: DistrictDesertApi): DesertRegion {
+export function desertRegionFromDistrict(d: DistrictDesertApi, index = 0): DesertRegion {
   const [lat, lng] = coordsForDistrict(d.district, d.state);
   const primaryGap = d.top_capability_gaps[0] ?? "icu";
+  const slug = `${d.state}-${d.district}`.toLowerCase().replace(/\s+/g, "-");
   return {
-    id: `${d.state}-${d.district}`.toLowerCase().replace(/\s+/g, "-"),
+    // Index suffix guarantees uniqueness even if the API returns duplicate
+    // (state, district) pairs.
+    id: `${slug}-${index}`,
     areaName: d.district,
     state: d.state,
     district: d.district,
@@ -466,7 +469,7 @@ export function desertRegionFromDistrict(d: DistrictDesertApi): DesertRegion {
     rural: d.population < 5_000_000,
     averageTrustScore: d.avg_trust_score,
     distanceToVerifiedKm: 0,
-    dataCompleteness: 60,
+    dataCompleteness: Math.max(20, Math.min(100, Math.round(d.num_facilities * 12))),
     nearestVerifiedAlternatives: [],
     contradictionsFound: [],
     recommendedFollowUp: followUpForGaps(d.top_capability_gaps),
