@@ -228,6 +228,44 @@ export const FacilityDetail = ({ facility, onClose, standalone }: Props) => {
         )}
       </section>
 
+      {/* Evidence — row-level citations from raw source data */}
+      {facility.evidence_snippets && facility.evidence_snippets.length > 0 && (
+        <section className="p-5 border-b border-border-subtle">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-foreground">Evidence</h3>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              row-level citations
+            </span>
+          </div>
+          <ul className="space-y-3">
+            {facility.evidence_snippets.map((e, i) => {
+              const b = claimBadge[e.status];
+              return (
+                <li key={`${e.capability}-${i}`} className="space-y-1.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium text-foreground">
+                      {e.capability}
+                    </span>
+                    <span className="text-muted-foreground/60 text-xs">→</span>
+                    <span className={cn("text-xs font-medium rounded-md px-1.5 py-0.5", b.cls)}>
+                      {b.label}
+                    </span>
+                  </div>
+                  <blockquote className="rounded-md border-l-2 border-border bg-panel-elevated/60 px-3 py-2 text-sm text-foreground/85 italic leading-snug">
+                    “{e.snippet}”
+                  </blockquote>
+                  {e.source_field && (
+                    <p className="text-[11px] text-muted-foreground ml-1">
+                      Source field: <span className="font-mono">{e.source_field}</span>
+                    </p>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       {/* Contradictions — translated into user impact */}
       {(contradicted.length > 0 || facility.red_flags.length > 0) && (() => {
         const bullets = userImpactBullets(

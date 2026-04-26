@@ -19,6 +19,13 @@ export interface SubScores {
   completeness: number;
 }
 
+export interface EvidenceSnippet {
+  capability: string;
+  status: ClaimStatus;
+  source_field: string;
+  snippet: string;
+}
+
 export interface Facility {
   id: string;
   name: string;
@@ -34,6 +41,7 @@ export interface Facility {
   claims: Claim[];
   red_flags: string[];
   web_verification: WebVerification;
+  evidence_snippets?: EvidenceSnippet[];
 }
 
 export const facilities: Facility[] = [
