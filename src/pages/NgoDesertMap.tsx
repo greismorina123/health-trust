@@ -51,8 +51,17 @@ const BAND_DOT: Record<RiskBand, string> = {
 
 const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+const SCORE_OPTIONS: { label: string; value: string }[] = [
+  { label: "Any score", value: "all" },
+  { label: "Critical (0–30)", value: "critical" },
+  { label: "Underserved (31–60)", value: "underserved" },
+  { label: "Better served (61–100)", value: "better" },
+];
+
 const NgoDesertMap = () => {
   const [gap, setGap] = useState<string>("all");
+  const [stateFilter, setStateFilter] = useState<string>("all");
+  const [scoreBand, setScoreBand] = useState<string>("all");
   const [regions, setRegions] = useState<DesertRegion[]>(fallbackDesertRegions);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -86,10 +95,20 @@ const NgoDesertMap = () => {
     };
   }, []);
 
+  const states = useMemo(() => {
+    const set = new Set<string>();
+    regions.forEach((r) => r.state && set.add(r.state));
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [regions]);
+
   const filtered = useMemo(() => {
-    if (gap === "all") return regions;
-    return regions.filter((r) => (r.capabilityGaps ?? []).includes(gap));
-  }, [regions, gap]);
+    return regions.filter((r) => {
+      if (gap !== "all" && !(r.capabilityGaps ?? []).includes(gap)) return false;
+      if (stateFilter !== "all" && r.state !== stateFilter) return false;
+      if (scoreBand !== "all" && bandForScore(r.riskScore) !== scoreBand) return false;
+      return true;
+    });
+  }, [regions, gap, stateFilter, scoreBand]);
 
   // Clear selection if it no longer matches the current filter.
   useEffect(() => {
