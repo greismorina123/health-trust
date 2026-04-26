@@ -134,25 +134,58 @@ const NgoDesertMap = () => {
               Backend unavailable — showing cached fallback data.
             </p>
           )}
-          <div className="rounded-xl border border-border-subtle bg-panel p-3.5 flex flex-col sm:flex-row sm:items-center gap-3">
-            <label
-              htmlFor="gap-filter"
-              className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground shrink-0"
-            >
-              <Filter className="h-3 w-3" />
-              View desert risk for
-            </label>
-            <select
-              id="gap-filter"
-              value={gap}
-              onChange={(e) => setGap(e.target.value)}
-              className="w-full sm:max-w-xs h-10 px-3 rounded-lg bg-background border border-border-subtle text-sm text-foreground outline-none focus:border-primary/50"
-            >
-              {GAP_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-            <span className="sm:ml-auto text-[11px] text-muted-foreground">
+          <div className="rounded-xl border border-border-subtle bg-panel p-3.5 flex flex-col lg:flex-row lg:items-end gap-3">
+            <FilterField id="gap-filter" label="Care gap" icon>
+              <select
+                id="gap-filter"
+                value={gap}
+                onChange={(e) => setGap(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg bg-background border border-border-subtle text-sm text-foreground outline-none focus:border-primary/50"
+              >
+                {GAP_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </FilterField>
+
+            <FilterField id="state-filter" label="Area / state">
+              <select
+                id="state-filter"
+                value={stateFilter}
+                onChange={(e) => setStateFilter(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg bg-background border border-border-subtle text-sm text-foreground outline-none focus:border-primary/50"
+              >
+                <option value="all">All states</option>
+                {states.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </FilterField>
+
+            <FilterField id="score-filter" label="Risk score">
+              <select
+                id="score-filter"
+                value={scoreBand}
+                onChange={(e) => setScoreBand(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg bg-background border border-border-subtle text-sm text-foreground outline-none focus:border-primary/50"
+              >
+                {SCORE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </FilterField>
+
+            {(gap !== "all" || stateFilter !== "all" || scoreBand !== "all") && (
+              <button
+                type="button"
+                onClick={() => { setGap("all"); setStateFilter("all"); setScoreBand("all"); }}
+                className="h-10 px-3 rounded-lg border border-border-subtle bg-background text-xs text-muted-foreground hover:text-foreground hover:bg-panel-elevated transition-colors shrink-0"
+              >
+                Reset
+              </button>
+            )}
+
+            <span className="lg:ml-auto text-[11px] text-muted-foreground shrink-0">
               {isLoading ? "Loading…" : `${filtered.length} districts shown`}
             </span>
           </div>
