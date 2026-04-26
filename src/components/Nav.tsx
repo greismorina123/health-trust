@@ -1,5 +1,5 @@
-import { Link, useNavigate } from "react-router-dom";
-import { MapPin, Moon, Sun, ChevronDown, User, Building2 } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { MapPin, Moon, Sun, ChevronDown, User, Building2, Search as SearchIcon, Map as MapIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { dashboardPathFor, useRole, type Role } from "@/context/RoleContext";
