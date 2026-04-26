@@ -1,8 +1,9 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { Disclaimer } from "@/components/Disclaimer";
+import { useRole } from "@/context/RoleContext";
 
 const exampleChips = [
   "Emergency & ICU near Delhi",
@@ -12,7 +13,14 @@ const exampleChips = [
 
 const Landing = () => {
   const navigate = useNavigate();
+  const { setRole } = useRole();
   const [q, setQ] = useState("");
+
+  // Visiting the public landing page always resets to the "user" experience.
+  // NGO mode is only entered by explicitly logging in as NGO from /login.
+  useEffect(() => {
+    setRole("user");
+  }, [setRole]);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
