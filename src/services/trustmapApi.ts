@@ -107,9 +107,20 @@ export interface DistrictDesertApi {
   desert_score: number;
   population: number;
   top_capability_gaps: string[];
-  num_facilities: number;
-  avg_trust_score: number;
+  // Some backend versions return num_facilities / avg_trust_score, others omit them.
+  num_facilities?: number;
+  avg_trust_score?: number;
+  // Optional geometry — most backend versions don't include these.
+  latitude?: number;
+  longitude?: number;
 }
+
+// Wire shape can be either a raw array or { districts: [...] }.
+// Field for gaps can be `top_capability_gaps` or `top_gaps`.
+type DistrictWire = Partial<DistrictDesertApi> & {
+  top_gaps?: string[];
+};
+type DistrictsWireResponse = DistrictWire[] | { districts: DistrictWire[] };
 
 // ============================================================================
 // Low-level fetch helper
@@ -186,7 +197,27 @@ export async function getFacilityPins(): Promise<FacilityPinApi[]> {
 }
 
 export async function getDistricts(): Promise<DistrictDesertApi[]> {
-  return request<DistrictDesertApi[]>("/districts");
+  const raw = await request<DistrictsWireResponse>("/districts");
+  const list: DistrictWire[] = Array.isArray(raw)
+    ? raw
+    : Array.isArray((raw as { districts?: DistrictWire[] })?.districts)
+      ? (raw as { districts: DistrictWire[] }).districts
+      : [];
+  return list
+    .filter((d) => d && d.district && d.state)
+    .map((d) => ({
+      district: String(d.district),
+      state: String(d.state),
+      desert_score: Number(d.desert_score ?? 0),
+      population: Number(d.population ?? 0),
+      top_capability_gaps: (d.top_capability_gaps ?? d.top_gaps ?? []).map(
+        (g) => String(g).toLowerCase(),
+      ),
+      num_facilities: d.num_facilities,
+      avg_trust_score: d.avg_trust_score,
+      latitude: d.latitude,
+      longitude: d.longitude,
+    }));
 }
 
 // ============================================================================
@@ -331,40 +362,44 @@ const mapGapToCapability = (gap: string): CapabilityKey => {
 };
 
 const FOLLOW_UP_BY_GAP: Record<string, string> = {
-  dialysis:
-    "Verify operational dialysis machines and identify transport support options.",
-  icu:
-    "Verify ICU beds, oxygen supply, ventilators, and trained staff.",
-  obstetrics:
-    "Verify emergency obstetric surgery, anesthesia support, blood support, and night coverage.",
-  cardiology:
-    "Verify ECG, emergency cardiac care, oxygen support, and specialist availability.",
-  oncology:
-    "Verify chemotherapy capability, oncology specialists, and referral pathways.",
-  emergency:
-    "Verify emergency stabilization capacity, ambulance availability, blood support, and referral pathways.",
-  neonatal:
-    "Verify NICU beds, incubators, pediatric staff, and emergency newborn transport options.",
-  pediatrics:
-    "Verify NICU beds, incubators, pediatric staff, and emergency newborn transport options.",
-  surgery:
-    "Verify operating-room readiness, anesthesia coverage, and surgical staffing.",
-  anesthesia:
-    "Verify anesthesiologist availability and night coverage before referrals.",
+  dialysis: "Verify operational dialysis machines, trained staff, and patient transport options.",
+  icu: "Verify ICU beds, oxygen supply, ventilators, and trained staff.",
+  obstetrics: "Verify emergency C-section readiness, anesthesia, blood support, and night coverage.",
+  cardiology: "Verify ECG, cardiac emergency care, oxygen support, and specialist availability.",
+  oncology: "Verify oncology specialists, chemotherapy availability, diagnostics, and referral pathways.",
+  emergency: "Verify emergency staff, ambulance access, oxygen, and night coverage.",
+  neonatal: "Verify NICU beds, incubators, pediatric staff, and emergency newborn transport options.",
+  pediatrics: "Verify NICU beds, incubators, pediatric staff, and emergency newborn transport options.",
+  surgery: "Verify operating-room readiness, anesthesia coverage, and surgical staffing.",
+  anesthesia: "Verify anesthesiologist availability and night coverage before referrals.",
 };
 
-export const followUpForGaps = (gaps: string[]): string => {
-  const lines = gaps
-    .map((g) => FOLLOW_UP_BY_GAP[g.toLowerCase()])
-    .filter(Boolean);
-  if (lines.length === 0) {
-    return "Field-verify capability claims and confirm trained staff availability.";
+/** Returns up to 3 short follow-up bullets, one per matched gap. */
+export const followUpBulletsForGaps = (gaps: string[]): string[] => {
+  const seen = new Set<string>();
+  const lines: string[] = [];
+  for (const g of gaps) {
+    const line = FOLLOW_UP_BY_GAP[g.toLowerCase()];
+    if (line && !seen.has(line)) {
+      seen.add(line);
+      lines.push(line);
+      if (lines.length >= 3) break;
+    }
   }
-  return Array.from(new Set(lines)).join(" ");
+  if (lines.length === 0) {
+    return ["Field-verify capability claims and confirm trained staff availability."];
+  }
+  return lines;
 };
 
+/** Legacy single-string variant kept for callers that join paragraphs. */
+export const followUpForGaps = (gaps: string[]): string =>
+  followUpBulletsForGaps(gaps).join(" ");
+
+// Per current product spec: LOWER desert_score means worse coverage.
+//   0–30 → critical (high risk), 31–60 → underserved (medium), 61–100 → better (low).
 const desertScoreToLevel = (score: number): RiskLevel =>
-  score >= 70 ? "high" : score >= 50 ? "medium" : "low";
+  score <= 30 ? "high" : score <= 60 ? "medium" : "low";
 
 // Coarse district → coords lookup so the map can position circles.
 // API does not return geometry; this is a best-effort map for visible rendering.
@@ -433,11 +468,15 @@ const DISTRICT_CENTROIDS: Record<string, [number, number]> = {
   Delhi: [28.61, 77.21],
 };
 
+/**
+ * Best-effort lookup for district coordinates. Returns `null` when neither the
+ * district nor its state is known — callers should treat that as "no map pin"
+ * but still show the district in lists/details.
+ */
 export const coordsForDistrict = (
   district: string,
   state: string,
-  fallbackJitter = 0,
-): [number, number] => {
+): [number, number] | null => {
   const direct = DISTRICT_CENTROIDS[district];
   if (direct) return direct;
   const c = STATE_CENTROIDS[state];
@@ -446,15 +485,31 @@ export const coordsForDistrict = (
     const seed = (district.charCodeAt(0) ?? 0) + (district.length || 0);
     const j = (seed % 7) * 0.15 - 0.5;
     const k = ((seed * 3) % 7) * 0.15 - 0.5;
-    return [c[0] + j + fallbackJitter, c[1] + k + fallbackJitter];
+    return [c[0] + j, c[1] + k];
   }
-  return [22.0, 79.0];
+  return null;
 };
 
 export function desertRegionFromDistrict(d: DistrictDesertApi, index = 0): DesertRegion {
-  const [lat, lng] = coordsForDistrict(d.district, d.state);
+  // Prefer geometry from the API; fall back to a coarse lookup.
+  const apiCoords: [number, number] | null =
+    typeof d.latitude === "number" && typeof d.longitude === "number"
+      ? [d.latitude, d.longitude]
+      : null;
+  const coords = apiCoords ?? coordsForDistrict(d.district, d.state);
   const primaryGap = d.top_capability_gaps[0] ?? "icu";
   const slug = `${d.state}-${d.district}`.toLowerCase().replace(/\s+/g, "-");
+  const numFacilities = d.num_facilities ?? 0;
+  const avgTrust = d.avg_trust_score ?? 0;
+  const explanationParts: string[] = [];
+  if (numFacilities > 0) {
+    explanationParts.push(`${numFacilities} known facilities serve ~${d.population.toLocaleString()} people.`);
+  } else {
+    explanationParts.push(`Serves ~${d.population.toLocaleString()} people.`);
+  }
+  if (avgTrust > 0) explanationParts.push(`Average Trust Score: ${avgTrust}.`);
+  explanationParts.push(`Top gaps: ${d.top_capability_gaps.join(", ") || "—"}.`);
+
   return {
     // Index suffix guarantees uniqueness even if the API returns duplicate
     // (state, district) pairs.
@@ -467,18 +522,20 @@ export function desertRegionFromDistrict(d: DistrictDesertApi, index = 0): Deser
     riskScore: d.desert_score,
     riskLevel: desertScoreToLevel(d.desert_score),
     rural: d.population < 5_000_000,
-    averageTrustScore: d.avg_trust_score,
+    averageTrustScore: avgTrust,
     distanceToVerifiedKm: 0,
-    dataCompleteness: Math.max(20, Math.min(100, Math.round(d.num_facilities * 12))),
+    dataCompleteness: Math.max(20, Math.min(100, Math.round(numFacilities * 12))),
     nearestVerifiedAlternatives: [],
     contradictionsFound: [],
     recommendedFollowUp: followUpForGaps(d.top_capability_gaps),
-    explanation: `${d.num_facilities} facilities serve ~${d.population.toLocaleString()} people. Average Trust Score: ${d.avg_trust_score}. Top gaps: ${d.top_capability_gaps.join(", ") || "—"}.`,
+    explanation: explanationParts.join(" "),
     capabilityGaps: d.top_capability_gaps.map((g) => g.toLowerCase()),
-    numFacilities: d.num_facilities,
+    numFacilities,
     population: d.population,
-    lat,
-    lng,
+    // Use NaN sentinels when no coordinates are known; the map skips these
+    // regions but lists/details still render them.
+    lat: coords?.[0] ?? Number.NaN,
+    lng: coords?.[1] ?? Number.NaN,
   };
 }
 
