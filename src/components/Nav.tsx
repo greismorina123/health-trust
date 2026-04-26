@@ -122,13 +122,14 @@ const RoleNavLinks = () => {
   const { role } = useRole();
   const { pathname } = useLocation();
 
-  const links =
-    role === "ngo"
-      ? [
-          { to: "/ngo", label: "Map", icon: MapIcon },
-          { to: "/search", label: "Search", icon: SearchIcon },
-        ]
-      : [{ to: "/search", label: "Search", icon: SearchIcon }];
+  // Only NGOs get nav links (Map / Search). Users land on /search and have
+  // no map access, so showing a single "Search" link would be redundant.
+  if (role !== "ngo") return null;
+
+  const links = [
+    { to: "/ngo", label: "Map", icon: MapIcon },
+    { to: "/search", label: "Search", icon: SearchIcon },
+  ];
 
   return (
     <nav className="hidden sm:flex items-center gap-1 mr-1">
