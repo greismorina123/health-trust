@@ -139,7 +139,7 @@ const NgoDesertMap = () => {
           )}
         </div>
 
-        {/* Top: selector + 3 summary cards */}
+        {/* Top: filter + 3 summary cards in a single bar */}
         <section className="fade-up grid gap-3 md:grid-cols-[minmax(220px,300px)_1fr] mb-4">
           <div className="rounded-xl border border-border-subtle bg-panel p-3.5">
             <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
@@ -178,71 +178,13 @@ const NgoDesertMap = () => {
           </div>
         </section>
 
-        {/* Body: list / map / detail */}
-        <div className="grid gap-4 lg:grid-cols-[320px_1fr_360px]">
-          {/* Left: highest-risk list */}
-          <aside className="rounded-xl border border-border-subtle bg-panel overflow-hidden flex flex-col max-h-[640px]">
-            <div className="px-3.5 py-2.5 border-b border-border-subtle flex items-center justify-between">
-              <h2 className="text-sm font-medium text-foreground">Highest-risk areas</h2>
-              <span className="text-[11px] text-muted-foreground">
-                {isLoading ? "…" : `${filtered.length}`}
-              </span>
-            </div>
-            {isLoading ? (
-              <div className="flex items-center justify-center gap-2 p-6 text-xs text-muted-foreground">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Loading district risk data…
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="p-5 text-xs text-muted-foreground">
-                No districts match this care gap in the current backend response.
-              </div>
-            ) : (
-              <ul className="overflow-y-auto divide-y divide-border-subtle">
-                {filtered.slice(0, 60).map((r) => {
-                  const band = bandForScore(r.riskScore);
-                  const isSel = r.id === selected?.id;
-                  return (
-                    <li key={r.id}>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedId(r.id)}
-                        className={cn(
-                          "w-full text-left px-3.5 py-2.5 hover:bg-panel-elevated/60 transition-colors flex items-start gap-2.5",
-                          isSel && "bg-panel-elevated/70",
-                        )}
-                      >
-                        <span className={cn("mt-1.5 h-2 w-2 rounded-full shrink-0", BAND_DOT[band])} />
-                        <span className="flex-1 min-w-0">
-                          <span className="flex items-center justify-between gap-2">
-                            <span className="text-sm text-foreground truncate">{r.district}</span>
-                            <span className={cn("text-[10px] font-medium rounded-md px-1.5 py-0.5 border shrink-0", BAND_BADGE[band])}>
-                              {r.riskScore}
-                            </span>
-                          </span>
-                          <span className="block text-[11px] text-muted-foreground mt-0.5 truncate">{r.state}</span>
-                          {(r.capabilityGaps ?? []).length > 0 && (
-                            <span className="mt-1.5 flex flex-wrap gap-1">
-                              {(r.capabilityGaps ?? []).slice(0, 3).map((g) => (
-                                <span
-                                  key={g}
-                                  className="inline-flex items-center rounded-md bg-background/60 border border-border-subtle text-muted-foreground px-1.5 py-0.5 text-[10px]"
-                                >
-                                  {titleCase(g)}
-                                </span>
-                              ))}
-                            </span>
-                          )}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </aside>
-
-          {/* Center: map */}
+        {/* Map + (conditional) selected-district sidebar */}
+        <div
+          className={cn(
+            "grid gap-4",
+            selected ? "lg:grid-cols-[1fr_360px]" : "grid-cols-1",
+          )}
+        >
           <div className="relative rounded-xl border border-border-subtle bg-panel overflow-hidden h-[460px] lg:h-[640px]">
             <DesertMap
               regions={filtered}
@@ -257,15 +199,72 @@ const NgoDesertMap = () => {
             </div>
           </div>
 
-          {/* Right: detail */}
-          {selected ? (
-            <RegionDetail region={selected} />
-          ) : (
-            <div className="rounded-xl border border-border-subtle bg-panel p-6 text-center text-sm text-muted-foreground">
-              Select a district to see details.
-            </div>
+          {selected && (
+            <RegionDetail region={selected} onClose={() => setSelectedId(null)} />
           )}
         </div>
+
+        {/* High-risk areas list — shown below the map */}
+        <section className="mt-6 rounded-xl border border-border-subtle bg-panel overflow-hidden">
+          <div className="px-4 py-3 border-b border-border-subtle flex items-center justify-between">
+            <h2 className="text-sm font-medium text-foreground">Highest-risk areas</h2>
+            <span className="text-[11px] text-muted-foreground">
+              {isLoading ? "…" : `${filtered.length} districts`}
+            </span>
+          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center gap-2 p-6 text-xs text-muted-foreground">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Loading district risk data…
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="p-5 text-xs text-muted-foreground">
+              No districts match this care gap in the current backend response.
+            </div>
+          ) : (
+            <ul className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-border-subtle/40">
+              {filtered.slice(0, 60).map((r) => {
+                const band = bandForScore(r.riskScore);
+                const isSel = r.id === selected?.id;
+                return (
+                  <li key={r.id} className="bg-panel">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedId(r.id)}
+                      className={cn(
+                        "w-full text-left px-3.5 py-3 hover:bg-panel-elevated/60 transition-colors flex items-start gap-2.5 h-full",
+                        isSel && "bg-panel-elevated/70",
+                      )}
+                    >
+                      <span className={cn("mt-1.5 h-2 w-2 rounded-full shrink-0", BAND_DOT[band])} />
+                      <span className="flex-1 min-w-0">
+                        <span className="flex items-center justify-between gap-2">
+                          <span className="text-sm text-foreground truncate">{r.district}</span>
+                          <span className={cn("text-[10px] font-medium rounded-md px-1.5 py-0.5 border shrink-0", BAND_BADGE[band])}>
+                            {r.riskScore}
+                          </span>
+                        </span>
+                        <span className="block text-[11px] text-muted-foreground mt-0.5 truncate">{r.state}</span>
+                        {(r.capabilityGaps ?? []).length > 0 && (
+                          <span className="mt-1.5 flex flex-wrap gap-1">
+                            {(r.capabilityGaps ?? []).slice(0, 3).map((g) => (
+                              <span
+                                key={g}
+                                className="inline-flex items-center rounded-md bg-background/60 border border-border-subtle text-muted-foreground px-1.5 py-0.5 text-[10px]"
+                              >
+                                {titleCase(g)}
+                              </span>
+                            ))}
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
 
         <Disclaimer />
       </main>
