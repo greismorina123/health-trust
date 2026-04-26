@@ -11,7 +11,6 @@ import {
 } from "@/data/roleData";
 import {
   desertRegionFromDistrict,
-  followUpBulletsForGaps,
   getDistricts,
 } from "@/services/trustmapApi";
 import { cn } from "@/lib/utils";
@@ -349,7 +348,7 @@ const RegionDetail = ({
 }) => {
   const band = bandForScore(region.riskScore);
   const gaps = region.capabilityGaps ?? [];
-  const followUps = followUpBulletsForGaps(gaps);
+  
   const hasCoords = Number.isFinite(region.lat) && Number.isFinite(region.lng);
   const siblings = clusterMembers.filter((m) => m.id !== region.id);
   const clusterSize = clusterMembers.length;
@@ -466,17 +465,6 @@ const RegionDetail = ({
           </p>
         </div>
 
-        <div>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Recommended follow-up</p>
-          <ul className="mt-1.5 space-y-1.5">
-            {followUps.map((f) => (
-              <li key={f} className="text-xs text-foreground/85 leading-relaxed flex gap-1.5">
-                <span className="text-primary mt-0.5">•</span>
-                <span>{f}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
       </div>
     </aside>
   );
