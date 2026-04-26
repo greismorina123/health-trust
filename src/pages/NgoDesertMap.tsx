@@ -25,7 +25,7 @@ const NgoDesertMap = () => {
   const [capability, setCapability] = useState<CapabilityKey | "all">("all");
   const [state, setState] = useState<string>("all");
   const [trustThreshold, setTrustThreshold] = useState<number>(0);
-  const [ruralOnly, setRuralOnly] = useState(false);
+  
   const [minCompleteness, setMinCompleteness] = useState(0);
   const [desertRegions, setDesertRegions] = useState<DesertRegion[]>(fallbackDesertRegions);
   const [detailCollapsed, setDetailCollapsed] = useState(false);
@@ -77,11 +77,11 @@ const NgoDesertMap = () => {
       if (capability !== "all" && r.missingCapability !== capability) return false;
       if (state !== "all" && r.state !== state) return false;
       if (trustThreshold > 0 && r.averageTrustScore > trustThreshold) return false;
-      if (ruralOnly && !r.rural) return false;
+      
       if (r.dataCompleteness < minCompleteness) return false;
       return true;
     });
-  }, [desertRegions, capability, state, trustThreshold, ruralOnly, minCompleteness]);
+  }, [desertRegions, capability, state, trustThreshold, minCompleteness]);
 
   const selected = useMemo(
     () => filtered.find((r) => r.id === selectedId) ?? filtered[0] ?? null,
@@ -167,17 +167,6 @@ const NgoDesertMap = () => {
                 onChange={(e) => setMinCompleteness(Number(e.target.value))}
                 className="w-full accent-[hsl(var(--primary))]"
               />
-            </FilterField>
-            <FilterField label="Area type">
-              <label className="h-9 flex items-center gap-2 px-2.5 rounded-lg bg-background border border-border-subtle text-xs text-foreground cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={ruralOnly}
-                  onChange={(e) => setRuralOnly(e.target.checked)}
-                  className="accent-[hsl(var(--primary))]"
-                />
-                Rural only
-              </label>
             </FilterField>
           </div>
         </section>
