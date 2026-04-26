@@ -196,6 +196,10 @@ export interface DesertRegion {
   contradictionsFound: string[];
   recommendedFollowUp: string;
   explanation: string;
+  // Raw API fields (when sourced from backend) — used by filters / detail panel.
+  capabilityGaps?: string[]; // lowercase API keys, e.g. ["dialysis","icu"]
+  numFacilities?: number;
+  population?: number;
   // map coords
   lat: number;
   lng: number;
