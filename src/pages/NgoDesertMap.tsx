@@ -103,12 +103,8 @@ const NgoDesertMap = () => {
     [filtered, selectedId],
   );
 
-  // Summary metrics.
-  const criticalCount = filtered.filter((r) => r.riskScore <= 30).length;
-  const populationAffected = filtered.reduce((sum, r) => sum + (r.population ?? 0), 0);
-  const avgScore = filtered.length
-    ? Math.round(filtered.reduce((s, r) => s + r.riskScore, 0) / filtered.length)
-    : 0;
+  // Summary metric (kept only if needed elsewhere — currently no header cards).
+  void filtered;
 
   return (
     <div className="min-h-screen bg-background">
