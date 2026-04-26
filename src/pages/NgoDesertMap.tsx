@@ -61,6 +61,9 @@ const SCORE_OPTIONS: { label: string; value: string }[] = [
 ];
 
 const NgoDesertMap = () => {
+  const { role } = useRole();
+  if (role !== "ngo") return <Navigate to="/search" replace />;
+
   const [gap, setGap] = useState<string>("all");
   const [stateFilter, setStateFilter] = useState<string>("all");
   const [scoreBand, setScoreBand] = useState<string>("all");
