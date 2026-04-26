@@ -4,15 +4,30 @@ import { Nav } from "@/components/Nav";
 import { DesertMap } from "@/components/DesertMap";
 import { Disclaimer } from "@/components/Disclaimer";
 import {
-  type CapabilityKey,
   type DesertRegion,
   type RiskLevel,
-  capabilityFilters,
   desertRegions as fallbackDesertRegions,
 } from "@/data/roleData";
 import { trustHsl } from "@/data/facilities";
 import { desertRegionFromDistrict, getDistricts } from "@/services/trustmapApi";
 import { cn } from "@/lib/utils";
+
+// Real backend gap keys (lowercase, from /districts top_capability_gaps).
+const API_CAPABILITY_GAPS = [
+  "dialysis",
+  "icu",
+  "oncology",
+  "obstetrics",
+  "cardiology",
+  "anesthesia",
+  "emergency",
+  "pediatrics",
+  "neonatal",
+  "surgery",
+] as const;
+type GapKey = (typeof API_CAPABILITY_GAPS)[number];
+
+const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const riskBadge = (level: RiskLevel) =>
   level === "high"
@@ -22,11 +37,11 @@ const riskBadge = (level: RiskLevel) =>
       : "bg-trust-high/15 text-trust-high border-trust-high/30";
 
 const NgoDesertMap = () => {
-  const [capability, setCapability] = useState<CapabilityKey | "all">("all");
+  const [capability, setCapability] = useState<GapKey | "all">("all");
   const [state, setState] = useState<string>("all");
-  const [trustThreshold, setTrustThreshold] = useState<number>(0);
-  
-  const [minCompleteness, setMinCompleteness] = useState(0);
+  const [maxTrust, setMaxTrust] = useState<number>(100);
+  const [minRisk, setMinRisk] = useState<number>(0);
+  const [minFacilities, setMinFacilities] = useState<number>(0);
   const [desertRegions, setDesertRegions] = useState<DesertRegion[]>(fallbackDesertRegions);
   const [detailCollapsed, setDetailCollapsed] = useState(false);
   const [selectedId, setSelectedId] = useState<string>(fallbackDesertRegions[0].id);
@@ -46,15 +61,9 @@ const NgoDesertMap = () => {
         const mapped = districts
           .map((d, i) => desertRegionFromDistrict(d, i))
           .sort((a, b) => b.riskScore - a.riskScore);
-        console.info("[NgoDesertMap] mapped regions", {
-          count: mapped.length,
-          sample: mapped[0],
-        });
         if (mapped.length > 0) {
           setDesertRegions(mapped);
           setSelectedId(mapped[0].id);
-        } else {
-          console.warn("[NgoDesertMap] No regions after mapping — keeping fallback.");
         }
       } catch (err) {
         console.error("[NgoDesertMap] Failed to load /districts — using fallback.", err);
@@ -72,16 +81,28 @@ const NgoDesertMap = () => {
     [desertRegions],
   );
 
+  // Only show capability options that actually appear in the loaded data.
+  const capabilityOptions = useMemo(() => {
+    const present = new Set<string>();
+    for (const r of desertRegions) {
+      for (const g of r.capabilityGaps ?? []) present.add(g);
+    }
+    return API_CAPABILITY_GAPS.filter((g) => present.has(g));
+  }, [desertRegions]);
+
   const filtered = useMemo(() => {
     return desertRegions.filter((r) => {
-      if (capability !== "all" && r.missingCapability !== capability) return false;
+      if (capability !== "all") {
+        const gaps = r.capabilityGaps ?? [];
+        if (!gaps.includes(capability)) return false;
+      }
       if (state !== "all" && r.state !== state) return false;
-      if (trustThreshold > 0 && r.averageTrustScore > trustThreshold) return false;
-      
-      if (r.dataCompleteness < minCompleteness) return false;
+      if (r.averageTrustScore > maxTrust) return false;
+      if (r.riskScore < minRisk) return false;
+      if ((r.numFacilities ?? 0) < minFacilities) return false;
       return true;
     });
-  }, [desertRegions, capability, state, trustThreshold, minCompleteness]);
+  }, [desertRegions, capability, state, maxTrust, minRisk, minFacilities]);
 
   const selected = useMemo(
     () => filtered.find((r) => r.id === selectedId) ?? filtered[0] ?? null,
