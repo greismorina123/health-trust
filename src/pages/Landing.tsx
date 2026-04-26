@@ -163,6 +163,24 @@ const Landing = () => {
                 </p>
               </div>
             </div>
+
+            <div className="grid grid-cols-[48px_1fr] sm:grid-cols-[60px_1fr] gap-6 py-7">
+              <span className="text-muted-foreground text-sm font-mono">05</span>
+              <div>
+                <h3 className="text-base font-medium text-foreground mb-1">
+                  See how scores are calculated
+                </h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Every Trust Score and Desert Score comes from a transparent formula.{" "}
+                  <Link
+                    to="/methodology"
+                    className="text-foreground underline underline-offset-2 hover:text-primary transition-colors"
+                  >
+                    Read the methodology →
+                  </Link>
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
