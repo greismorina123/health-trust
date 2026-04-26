@@ -1,28 +1,33 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { User, Building2 } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { dashboardPathFor, useRole, type Role } from "@/context/RoleContext";
+import { cn } from "@/lib/utils";
 
 const Login = () => {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const role = params.get("role");
+  const queryRole = params.get("role");
   const { setRole, role: currentRole } = useRole();
+
+  // Initial role: ?role=ngo from URL wins, otherwise the last-used role.
+  const initialRole: Role =
+    queryRole === "ngo" || queryRole === "government" ? "ngo" : currentRole;
+  const [selectedRole, setSelectedRole] = useState<Role>(initialRole);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    const next: Role =
-      role === "ngo" || role === "government" ? "ngo" : currentRole;
-    setRole(next);
-    navigate(dashboardPathFor(next));
+    setRole(selectedRole);
+    navigate(dashboardPathFor(selectedRole));
   };
 
-  const roleLabel =
-    role === "ngo" || role === "government"
-      ? { label: "NGO Dashboard", color: "text-trust-mid" }
-      : null;
+  const roleOptions: { value: Role; label: string; desc: string; icon: typeof User }[] = [
+    { value: "user", label: "User", desc: "Search trusted facilities", icon: User },
+    { value: "ngo", label: "NGO", desc: "Identify care deserts", icon: Building2 },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -30,11 +35,44 @@ const Login = () => {
       <main className="px-6 pt-24">
         <div className="max-w-sm mx-auto fade-up">
           <h1 className="text-xl font-semibold text-foreground">Sign in to CareMap</h1>
-          {roleLabel && (
-            <p className={`mt-1 text-sm font-medium ${roleLabel.color}`}>{roleLabel.label}</p>
-          )}
+          <p className="mt-1 text-sm text-muted-foreground">
+            Choose how you want to use CareMap.
+          </p>
 
-          <form onSubmit={submit} className="mt-6 space-y-3">
+          <form onSubmit={submit} className="mt-6 space-y-4">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1.5">Sign in as</p>
+              <div className="grid grid-cols-2 gap-2">
+                {roleOptions.map(({ value, label, desc, icon: Icon }) => {
+                  const active = selectedRole === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setSelectedRole(value)}
+                      className={cn(
+                        "rounded-lg border p-3 text-left transition-colors",
+                        active
+                          ? "border-primary bg-primary/5"
+                          : "border-border-subtle bg-panel hover:border-primary/40",
+                      )}
+                    >
+                      <Icon
+                        className={cn(
+                          "h-4 w-4 mb-1.5",
+                          active ? "text-primary" : "text-muted-foreground",
+                        )}
+                      />
+                      <p className="text-sm font-medium text-foreground">{label}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                        {desc}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div>
               <label className="text-xs text-muted-foreground block mb-1.5">Email</label>
               <input
@@ -61,14 +99,14 @@ const Login = () => {
               type="submit"
               className="w-full h-10 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
             >
-              Sign In
+              Sign In as {selectedRole === "ngo" ? "NGO" : "User"}
             </button>
           </form>
 
           <p className="mt-4 text-sm text-muted-foreground text-center">
             Don't have an account?{" "}
             <Link
-              to={role ? `/signup?role=${role}` : "/signup"}
+              to={`/signup?role=${selectedRole}`}
               className="text-primary font-medium hover:underline"
             >
               Sign up
