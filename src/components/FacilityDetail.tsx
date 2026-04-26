@@ -297,8 +297,8 @@ export const FacilityDetail = ({ facility, onClose, standalone }: Props) => {
                   <p className="text-xs text-muted-foreground mt-1 ml-1">
                     Source: {c.source_field}
                   </p>
-                  <p className="text-xs text-muted-foreground/80 italic ml-1 line-clamp-2" title={c.source_text}>
-                    {c.source_text}
+                  <p className="text-xs text-muted-foreground/85 leading-snug ml-1" title={c.source_text}>
+                    {explainEvidence(c.source_text, c.status, c.claim, c.source_field)}
                   </p>
                 </li>
               );
