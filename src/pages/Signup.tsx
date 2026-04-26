@@ -41,7 +41,6 @@ const Signup = () => {
 
   const roles: Array<{ key: Role; label: string }> = [
     { key: "patient", label: "Patient" },
-    { key: "doctor", label: "Doctor" },
     { key: "government", label: "Government / NGO" },
   ];
 
