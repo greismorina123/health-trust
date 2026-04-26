@@ -125,6 +125,17 @@ const NgoDesertMap = () => {
     [filtered, selectedId],
   );
 
+  // All districts in the same ~1km bucket as the selected one (matches map clustering).
+  const clusterMembers = useMemo(() => {
+    if (!selected) return [];
+    const bucket = (n: number) => Math.round(n / 0.01);
+    const lat = bucket(selected.lat);
+    const lng = bucket(selected.lng);
+    return filtered.filter(
+      (r) => bucket(r.lat) === lat && bucket(r.lng) === lng,
+    );
+  }, [filtered, selected]);
+
   if (role !== "ngo") return <Navigate to="/search" replace />;
 
   return (
