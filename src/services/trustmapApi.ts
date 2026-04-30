@@ -18,7 +18,7 @@ import {
 
 export const API_BASE_URL =
   (import.meta.env.VITE_TRUSTMAP_API_BASE_URL as string | undefined) ??
-  "https://expensive-veneering-untainted.ngrok-free.dev";
+  "https://health-trust.onrender.com";
 
 // ============================================================================
 // Backend types (mirror API contract)
